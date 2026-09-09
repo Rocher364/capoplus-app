@@ -1,5 +1,8 @@
 FROM php:8.2-fpm
 
+# Permèt Composer kouri kòm root
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -10,9 +13,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     sqlite3 \
     libsqlite3-dev \
+    libzip-dev \
     nginx
 
-RUN docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd zip
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -20,7 +24,8 @@ WORKDIR /var/www
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+# Enstale depandans yo san inyore pèmisyon yo
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 RUN mkdir -p /var/www/storage /var/www/bootstrap/cache /var/www/database
 RUN touch /var/www/database/database.sqlite
