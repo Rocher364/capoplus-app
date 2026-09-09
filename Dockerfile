@@ -27,8 +27,17 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 COPY nginx.conf /etc/nginx/sites-available/default
 
-RUN chmod +x /var/www/entrypoint.sh
+RUN mkdir -p /var/www/storage/framework/sessions \
+             /var/www/storage/framework/views \
+             /var/www/storage/framework/cache \
+             /var/www/bootstrap/cache \
+             /var/www/database
+
+RUN touch /var/www/database/database.sqlite
+
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/database
+RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache /var/www/database
 
 EXPOSE 80
 
-ENTRYPOINT ["/var/www/entrypoint.sh"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && php-fpm -D && nginx -g 'daemon off;'"]
