@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'redirect.auditeur' => \App\Http\Middleware\RedirectIfNotAuditeur::class,
+            'ensure.auditeur'   => \App\Http\Middleware\EnsureAuditeur::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
