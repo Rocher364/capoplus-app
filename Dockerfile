@@ -40,8 +40,8 @@ RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache /var/www/database
 
 EXPOSE 80
 
-# Kouri migrations AK seeders an premye, apre sa kouri nginx
+# Forse CACHE_STORE sou array pou migration an pa touche tab cache la
 CMD php-fpm -D && \
-    php artisan migrate --force && \
-    php artisan db:seed --force && \
+    php -d CACHE_STORE=array artisan migrate --force && \
+    php -d CACHE_STORE=array artisan db:seed --force && \
     nginx -g 'daemon off;'
