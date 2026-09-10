@@ -24,7 +24,6 @@ WORKDIR /var/www
 
 COPY . .
 
-# Bypass kòmand artisan yo pandan build an pou l pa fè crash
 RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
 COPY nginx.conf /etc/nginx/sites-available/default
