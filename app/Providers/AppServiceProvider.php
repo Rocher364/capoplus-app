@@ -20,7 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('app.env') === 'production' || request()->header('x-forwarded-proto') === 'https') {
+        // Fòse HTTPS an pwodiksyon ak dèyè reverse proxy Render
+        if (config('app.env') === 'production' || isset(['HTTP_X_FORWARDED_PROTO']) && ['HTTP_X_FORWARDED_PROTO'] === 'https') {
             URL::forceScheme('https');
         }
     }
