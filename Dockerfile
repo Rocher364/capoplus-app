@@ -24,11 +24,11 @@ WORKDIR /var/www
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+# Bypass kòmand artisan yo pandan build an pou l pa fè crash
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
 COPY nginx.conf /etc/nginx/sites-available/default
 
-# Fix dos2unix pou evite erè CRLF Windows sou Linux
 RUN dos2unix /var/www/entrypoint.sh && chmod +x /var/www/entrypoint.sh
 
 EXPOSE 80
