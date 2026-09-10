@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
     libzip-dev \
-    nginx
+    nginx \
+    dos2unix
 
 RUN docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd zip
 
@@ -27,21 +28,9 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 COPY nginx.conf /etc/nginx/sites-available/default
 
-RUN mkdir -p /var/www/storage/framework/sessions \
-             /var/www/storage/framework/views \
-             /var/www/storage/framework/cache \
-             /var/www/bootstrap/cache \
-             /var/www/database
-
-RUN touch /var/www/database/database.sqlite
-
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/database
-RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache /var/www/database
+# Fix dos2unix pou evite erè CRLF Windows sou Linux
+RUN dos2unix /var/www/entrypoint.sh && chmod +x /var/www/entrypoint.sh
 
 EXPOSE 80
 
-# Forse CACHE_STORE sou array pou migration an pa touche tab cache la
-CMD php-fpm -D && \
-    php -d CACHE_STORE=array artisan migrate --force && \
-    php -d CACHE_STORE=array artisan db:seed --force && \
-    nginx -g 'daemon off;'
+ENTRYPOINT ["/var/www/entrypoint.sh"]
