@@ -75,6 +75,14 @@
                             <a href="{{ route('director.historique') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.historique') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Historique</a>
                             <a href="{{ route('director.utilisateurs') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.utilisateurs*') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Utilisateurs</a>
                             <a href="{{ route('director.parametres') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.parametres') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Parametres</a>
+        <div class="px-3 py-2 border-t border-gray-100 mt-2">
+            <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir vous déconnecter ?');" class="m-0">
+                @csrf
+                <button type="submit" id="logout-director-dashboard-btn" class="w-full text-left text-sm font-semibold text-red-600 hover:text-red-700 py-1 transition block">
+                    Se déconnecter
+                </button>
+            </form>
+        </div>
                         </nav>
                     </details>
                     <h1 class="truncate text-base sm:text-lg font-semibold text-slate-800">@yield('title', 'Rapport du jour')</h1>
@@ -108,3 +116,4 @@
     </div>
 </body>
 </html>
+
