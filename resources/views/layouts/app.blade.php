@@ -90,6 +90,14 @@
                             <a href="{{ route('accounts.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('accounts.*') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Comptes</a>
                             <a href="{{ route('members.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('members.*') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Membres</a>
                             <a href="{{ route('loans.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('loans.*') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Prets</a>
+        <div class="border-t border-gray-100 mt-2 pt-2">
+            <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir vous déconnecter ?');">
+                @csrf
+                <button type="submit" id="logout-force-btn" class="w-full text-left px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-md transition block">
+                    Se déconnecter
+                </button>
+            </form>
+        </div>
                         </nav>
                     </details>
                     <h1 class="truncate text-base sm:text-lg font-semibold text-slate-800">@yield('title', 'Tableau de bord')</h1>
@@ -137,5 +145,6 @@
     </script>
 </body>
 </html>
+
 
 
