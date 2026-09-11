@@ -55,7 +55,7 @@
                 <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wider">Transactions recentes</h3>
                 <a href="{{ route('accounts.transactions', $account) }}" class="text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline transition no-print">Historique complet &rarr;</a>
             </div>
-            <table class="w-full text-sm text-left">
+            <div class="w-full overflow-x-auto my-2"><table class="w-full text-sm text-left">
                 <thead class="bg-slate-200/50 text-slate-700 uppercase text-xs font-bold tracking-wider border-b border-slate-300">
                     <tr>
                         <th class="px-6 py-3.5">Reference</th>
@@ -82,7 +82,7 @@
                         <tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 font-medium bg-slate-50/50">Aucune transaction.</td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 

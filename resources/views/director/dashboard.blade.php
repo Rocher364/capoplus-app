@@ -80,7 +80,7 @@
     <div class="px-6 py-4 bg-slate-200/80 border-b border-slate-300">
         <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wider">Journal complet du jour</h3>
     </div>
-    <table class="w-full text-sm text-left">
+    <div class="w-full overflow-x-auto my-2"><table class="w-full text-sm text-left">
         <thead class="bg-slate-200/50 text-slate-800 uppercase text-xs font-bold tracking-wider border-b border-slate-300">
             <tr>
                 <th class="px-6 py-3.5">Heure</th>
@@ -110,6 +110,6 @@
                 <tr><td colspan="5" class="px-6 py-12 text-center text-slate-500 font-medium bg-slate-50/50">Rien ne s'est encore passe aujourd'hui.</td></tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 </div>
 @endsection
