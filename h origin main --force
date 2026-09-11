@@ -1,0 +1,15 @@
+[33m13216aa[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Hide dark sidebar on mobile and add direct logout button near Refresh
+[33mfeaac24[m Fix full mobile layout overflow and force sidebar hide on small screens
+[33m366b09a[m Create direction views folder and fix settings layout for mobile
+[33mb6ebe65[m Expose logout option on mobile devices in navigation menu
+[33m3d7dbd2[m Make all transaction and account tables responsive on mobile screens
+[33ma882876[m Make accounts table responsive for mobile screens
+[33m7f70aed[m Register ensure.auditeur middleware and create EnsureAuditeur class
+[33m1ab89c0[m Redirect director to direction.dashboard on login
+[33m8f72c43[m Create RedirectIfNotAuditeur class and map redirect.auditeur alias
+[33m3d812fd[m Register redirect.auditeur middleware alias in bootstrap/app
+[33mdf5bfca[m Fix DatabaseSeeder user creation logic and prevent 500 error
+[33m7506b91[m Force db:seed on entrypoint startup to inject admin accounts
+[33m4a0220f[m Update DatabaseSeeder with Admin and Directeur accounts
+[33mdd25b8c[m Fix HTTP 500 error by restoring clean bootstrap and AppServiceProvider syntax
+[33m333e599[m Fix composer build with no-scripts flag
