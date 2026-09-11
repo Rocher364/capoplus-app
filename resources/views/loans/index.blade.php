@@ -64,3 +64,4 @@
 
 <div class="mt-6">{{ $loans->links() }}</div>
 @endsection
+
