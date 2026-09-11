@@ -13,7 +13,7 @@
 </div>
 
 <div class="bg-slate-100 rounded-2xl border border-slate-300 shadow-md overflow-hidden">
-    <table class="w-full text-sm text-left">
+    <div class="w-full overflow-x-auto my-2"><table class="w-full text-sm text-left">
         <thead class="bg-slate-200/80 text-slate-800 uppercase text-xs font-bold tracking-wider border-b border-slate-300">
             <tr>
                 <th class="px-6 py-3.5">N&deg; pret</th>
@@ -59,7 +59,7 @@
                 </tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 </div>
 
 <div class="mt-6">{{ $loans->links() }}</div>

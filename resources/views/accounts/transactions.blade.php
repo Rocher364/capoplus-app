@@ -11,7 +11,7 @@
 </div>
 
 <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-    <table class="w-full text-sm">
+    <div class="w-full overflow-x-auto my-2"><table class="w-full text-sm">
         <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
             <tr>
                 <th class="text-left px-6 py-3">Reference</th>
@@ -40,8 +40,9 @@
                 <tr><td colspan="6" class="px-6 py-10 text-center text-slate-400">Aucune transaction.</td></tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 </div>
 
 <div class="mt-4">{{ $transactions->links() }}</div>
 @endsection
+

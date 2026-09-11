@@ -88,7 +88,7 @@
     <div class="px-6 py-4 border-b">
         <h3 class="font-semibold text-slate-800">Toutes les operations d'aujourd'hui</h3>
     </div>
-    <table class="w-full text-sm">
+    <div class="w-full overflow-x-auto my-2"><table class="w-full text-sm">
         <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
             <tr>
                 <th class="text-left px-6 py-3">Heure</th>
@@ -117,6 +117,7 @@
                 <tr><td colspan="6" class="px-6 py-10 text-center text-slate-400">Aucune operation aujourd'hui pour le moment.</td></tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 </div>
 @endsection
+

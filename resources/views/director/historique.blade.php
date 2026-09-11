@@ -19,7 +19,7 @@
 </form>
 
 <div class="bg-slate-100 rounded-2xl border border-slate-300 shadow-md overflow-hidden">
-    <table class="w-full text-sm text-left">
+    <div class="w-full overflow-x-auto my-2"><table class="w-full text-sm text-left">
         <thead class="bg-slate-200/80 text-slate-800 uppercase text-xs font-bold tracking-wider border-b border-slate-300">
             <tr>
                 <th class="px-6 py-3.5">Date</th>
@@ -49,7 +49,7 @@
                 <tr><td colspan="5" class="px-6 py-12 text-center text-slate-500 font-medium bg-slate-50/50">Aucune activite trouvee.</td></tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 </div>
 
 <div class="mt-6">{{ $activites->links() }}</div>
