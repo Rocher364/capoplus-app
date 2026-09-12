@@ -26,7 +26,7 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
