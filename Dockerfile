@@ -1,6 +1,6 @@
 ﻿FROM php:8.2-apache
 
-# Enstale tout depandans ak ekstansyon PHP pou Laravel + PostgreSQL
+# Enstale depandans ak ekstansyon PHP pou Laravel + PostgreSQL
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     && docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 
-# Konfigure Apache pou Laravel
+# Konfigure Apache pou pwen dirèkteman sou dosye public/ Laravel la
 RUN a2enmod rewrite
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
