@@ -1,0 +1,5 @@
+﻿services:
+  - type: web
+    name: capoplus-app
+    env: docker
+    buildCommand: php artisan migrate --force && php artisan db:seed --force
