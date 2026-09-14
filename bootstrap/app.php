@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'redirect.auditeur' => \App\Http\Middleware\RedirectIfNotAuditeur::class,
             'ensure.auditeur'   => \App\Http\Middleware\EnsureAuditeur::class,

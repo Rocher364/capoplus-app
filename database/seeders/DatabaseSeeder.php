@@ -10,21 +10,38 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Seeder senp pou kreye kont yo si yo pa egziste
-        if (!User::where('email', 'romererocher@gmail.com')->exists()) {
-            User::create([
-                'name' => 'Admin Rocher',
-                'email' => 'romererocher@gmail.com',
-                'password' => Hash::make('toudji@12#'),
-            ]);
-        }
+        $comptes = [
+            [
+                'name' => env('ADMIN_NAME', 'Administrateur'),
+                'email' => env('ADMIN_EMAIL'),
+                'password' => env('ADMIN_PASSWORD'),
+                'role' => 'admin',
+            ],
+            [
+                'name' => env('DIRECTOR_NAME', 'Directeur'),
+                'email' => env('DIRECTOR_EMAIL'),
+                'password' => env('DIRECTOR_PASSWORD'),
+                'role' => 'auditeur',
+            ],
+        ];
 
-        if (!User::where('email', 'steeve@gmail.com')->exists()) {
-            User::create([
-                'name' => 'Directeur Steeve',
-                'email' => 'steeve@gmail.com',
-                'password' => Hash::make('toudji1234'),
+        foreach ($comptes as $compte) {
+            if (! $compte['email'] || ! $compte['password']) {
+                continue;
+            }
+
+            $user = User::firstOrNew(['email' => $compte['email']]);
+            $user->fill([
+                'name' => $compte['name'],
+                'role' => $compte['role'],
+                'statut' => 'actif',
             ]);
+
+            if (! $user->exists) {
+                $user->password = Hash::make($compte['password']);
+            }
+
+            $user->save();
         }
     }
 }

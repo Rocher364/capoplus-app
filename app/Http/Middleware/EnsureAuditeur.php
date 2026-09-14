@@ -13,10 +13,10 @@ class EnsureAuditeur
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
+        if ($request->user()?->isAuditeur()) {
             return $next($request);
         }
 
-        return redirect()->route('login');
+        abort(403);
     }
 }
