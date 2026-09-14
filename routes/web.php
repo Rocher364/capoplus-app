@@ -13,7 +13,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
         $user = auth()->user();
 
-        if ($user && ($user->email === 'steeve@gmail.com' || (isset($user->role) && $user->role === 'directeur'))) {
+        if ($user?->isAuditeur()) {
             return redirect()->route('director.dashboard');
         }
 

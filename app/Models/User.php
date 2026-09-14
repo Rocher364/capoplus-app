@@ -50,6 +50,12 @@ class User extends Authenticatable
         return $this->role === UserRole::Auditeur;
     }
 
+    public function canAuthenticate(): bool
+    {
+        return $this->statut === 'actif'
+            && (! $this->verrouille_jusqu_a || $this->verrouille_jusqu_a->isPast());
+    }
+
     /** Fiche(s) membre liee(s), si ce compte dispose aussi d'un acces portail client. */
     public function members(): HasMany
     {
