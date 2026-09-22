@@ -162,10 +162,10 @@ return [
     */
 
     'features' => [
-    Features::updateProfileInformation(),
-    Features::updatePasswords(),
-    Features::twoFactorAuthentication([
-        'confirmPassword' => true,
-    ]),
-],
+        // Features::updateProfileInformation(), // VULN-16 : Desactive car non utilise dans CAPO+ (gestion centralisee des identites)
+        Features::updatePasswords(),
+        Features::twoFactorAuthentication([
+            'confirmPassword' => true,
+        ]),
+    ],
 ];
