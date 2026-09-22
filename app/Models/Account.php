@@ -15,12 +15,16 @@ class Account extends Model
     protected $fillable = [
         'member_id',
         'numero_compte',
-        'solde',
-        'statut',
-        'raison_blocage',
-        'bloque_par_id',
-        'bloque_le',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Account $account) {
+            if (bccomp((string) ($account->solde ?? 0), '0', 2) < 0) {
+                throw new \InvalidArgumentException('Le solde du compte ne peut pas être négatif.');
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -28,6 +32,35 @@ class Account extends Model
             'solde' => 'decimal:2',
             'bloque_le' => 'datetime',
         ];
+    }
+
+    public function bloquer(string $raison, User $bloquePar): void
+    {
+        $this->forceFill([
+            'statut' => 'bloque',
+            'raison_blocage' => $raison,
+            'bloque_par_id' => $bloquePar->id,
+            'bloque_le' => now(),
+        ])->save();
+    }
+
+    public function debloquer(): void
+    {
+        $this->forceFill([
+            'statut' => 'actif',
+            'raison_blocage' => null,
+            'bloque_par_id' => null,
+            'bloque_le' => null,
+        ])->save();
+    }
+
+    public function actualiserSolde(string $nouveauSolde): void
+    {
+        if (bccomp((string) $nouveauSolde, '0', 2) < 0) {
+            throw new \InvalidArgumentException('Le solde ne peut pas être négatif.');
+        }
+
+        $this->forceFill(['solde' => $nouveauSolde])->save();
     }
 
     public function member(): BelongsTo

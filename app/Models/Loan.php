@@ -18,19 +18,13 @@ class Loan extends Model
         'account_id',
         'numero_pret',
         'montant_demande',
-        'montant_approuve',
         'motif',
         'duree_mois',
         'type_taux',
         'taux_interet',
         'methode_calcul',
-        'statut',
-        'justification_decision',
         'demande_par_id',
-        'approuve_par_id',
         'date_demande',
-        'date_decision',
-        'date_decaissement',
     ];
 
     protected function casts(): array

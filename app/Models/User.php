@@ -16,7 +16,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * Compte d'acces a la plateforme : Administrateur, Agent/Caissier ou Auditeur.
  * Les Membres/Clients sont geres via le modele Member (voir 3. Acteurs du systeme).
  */
-#[Fillable(['name', 'email', 'password', 'role', 'telephone', 'statut'])]
+#[Fillable(['name', 'email', 'password', 'telephone'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable
 {

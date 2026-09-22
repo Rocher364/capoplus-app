@@ -69,7 +69,7 @@ class AuthorizationSecurityTest extends TestCase
     {
         $requestor = $demandePar ?? $this->agent;
 
-        $loan = Loan::create([
+        $loan = new Loan([
             'member_id' => $this->member->id,
             'account_id' => $this->account->id,
             'numero_pret' => 'PRT-TEST-' . strtoupper(uniqid()),
@@ -79,17 +79,17 @@ class AuthorizationSecurityTest extends TestCase
             'type_taux' => 'fixe',
             'taux_interet' => 10.000,
             'methode_calcul' => 'simple',
-            'statut' => $status->value,
             'demande_par_id' => $requestor->id,
             'date_demande' => now(),
         ]);
+        $loan->forceFill(['statut' => $status->value])->save();
 
         if ($status === LoanStatus::Approuve || $status === LoanStatus::Decaisse) {
-            $loan->update([
+            $loan->forceFill([
                 'montant_approuve' => 10000.00,
                 'approuve_par_id' => $this->admin->id,
                 'date_decision' => now(),
-            ]);
+            ])->save();
         }
 
         return $loan;
@@ -237,12 +237,12 @@ class AuthorizationSecurityTest extends TestCase
     /** Test 10 : Un agent ne peut PAS debloquer un compte (403). */
     public function test_agent_cannot_unblock_account(): void
     {
-        $this->account->update([
+        $this->account->forceFill([
             'statut' => 'bloque',
             'raison_blocage' => 'Test',
             'bloque_par_id' => $this->admin->id,
             'bloque_le' => now(),
-        ]);
+        ])->save();
 
         $response = $this->actingAs($this->agent)->post(
             route('accounts.debloquer', $this->account)
@@ -258,12 +258,12 @@ class AuthorizationSecurityTest extends TestCase
     /** Test 11 : Un admin PEUT debloquer un compte. */
     public function test_admin_can_unblock_account(): void
     {
-        $this->account->update([
+        $this->account->forceFill([
             'statut' => 'bloque',
             'raison_blocage' => 'Test',
             'bloque_par_id' => $this->admin->id,
             'bloque_le' => now(),
-        ]);
+        ])->save();
 
         $response = $this->actingAs($this->admin)->post(
             route('accounts.debloquer', $this->account)

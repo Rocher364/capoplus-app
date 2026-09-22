@@ -43,18 +43,18 @@ class MemberController extends Controller
 
         $member = DB::transaction(function () use ($request, $data) {
             // 1. Kreye membre la
-            $membreCree = Member::create($data + [
+            $membreCree = new Member($data);
+            $membreCree->forceFill([
                 'numero_membre' => $this->genererNumeroMembre(),
                 'statut'        => 'actif',
                 'cree_par_id'   => $request->user()->id,
             ]);
+            $membreCree->save();
 
             // 2. Kreye kont finansyè (Account) pou membre la otomatikman
             Account::create([
                 'member_id'      => $membreCree->id,
                 'numero_compte'  => $this->genererNumeroCompte(),
-                'solde'          => 0.00,
-                'statut'         => 'actif',
             ]);
 
             return $membreCree;
@@ -110,6 +110,10 @@ class MemberController extends Controller
             'nom'           => $nom,
         ]);
 
+        if ($account) {
+            $account->delete();
+        }
+
         $member->delete();
 
         return back()->with('success', "Membre {$nom} supprimé.");
@@ -120,9 +124,9 @@ class MemberController extends Controller
         return $request->validate([
             'prenom'         => ['required', 'string', 'max:255'],
             'nom'            => ['required', 'string', 'max:255'],
-            'nif_cin'        => ['nullable', 'string', 'max:50', Rule::unique('members', 'nif_cin')->ignore($memberId)],
-            'telephone'      => ['nullable', 'string', 'max:50', Rule::unique('members', 'telephone')->ignore($memberId)],
-            'email'          => ['nullable', 'email', 'max:255', Rule::unique('members', 'email')->ignore($memberId)],
+            'nif_cin'        => ['nullable', 'string', 'max:50', Rule::unique('members', 'nif_cin')->whereNull('deleted_at')->ignore($memberId)],
+            'telephone'      => ['nullable', 'string', 'max:50', Rule::unique('members', 'telephone')->whereNull('deleted_at')->ignore($memberId)],
+            'email'          => ['nullable', 'email', 'max:255', Rule::unique('members', 'email')->whereNull('deleted_at')->ignore($memberId)],
             'adresse'        => ['nullable', 'string'],
             'date_naissance' => ['nullable', 'date'],
             'sexe'           => ['nullable', 'in:M,F,Autre'],

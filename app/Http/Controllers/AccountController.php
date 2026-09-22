@@ -75,12 +75,7 @@ class AccountController extends Controller
             'raison_blocage' => ['required', 'string', 'max:500'],
         ]);
 
-        $account->update([
-            'statut' => 'bloque',
-            'raison_blocage' => $data['raison_blocage'],
-            'bloque_par_id' => $request->user()->id,
-            'bloque_le' => now(),
-        ]);
+        $account->bloquer($data['raison_blocage'], $request->user());
 
         ActivityLogger::log($request->user(), 'compte.bloque', $account, [
             'numero_compte' => $account->numero_compte,
@@ -94,12 +89,7 @@ class AccountController extends Controller
     {
         $this->authorize('debloquer', $account);
 
-        $account->update([
-            'statut' => 'actif',
-            'raison_blocage' => null,
-            'bloque_par_id' => null,
-            'bloque_le' => null,
-        ]);
+        $account->debloquer();
 
         ActivityLogger::log($request->user(), 'compte.debloque', $account, [
             'numero_compte' => $account->numero_compte,

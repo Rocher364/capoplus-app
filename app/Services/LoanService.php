@@ -59,12 +59,12 @@ class LoanService
             throw new InvalidArgumentException('Le montant approuve ne peut pas depasser le montant demande.');
         }
 
-        $loan->update([
+        $loan->forceFill([
             'statut' => 'approuve',
             'montant_approuve' => $montantFinal,
             'approuve_par_id' => $admin->id,
             'date_decision' => now(),
-        ]);
+        ])->save();
 
         return $loan->fresh();
     }
@@ -85,12 +85,12 @@ class LoanService
             throw new \App\Exceptions\UnauthorizedActionException('Vous ne pouvez pas rejeter un pret que vous avez demande.');
         }
 
-        $loan->update([
+        $loan->forceFill([
             'statut' => 'rejete',
             'justification_decision' => $justification,
             'approuve_par_id' => $admin->id,
             'date_decision' => now(),
-        ]);
+        ])->save();
 
         return $loan->fresh();
     }
@@ -118,10 +118,10 @@ class LoanService
                 'operation_id' => $loan->id,
             ]);
 
-            $loan->update([
+            $loan->forceFill([
                 'statut' => 'decaisse',
                 'date_decaissement' => now(),
-            ]);
+            ])->save();
 
             $this->genererEcheancier($loan->fresh());
 
@@ -260,7 +260,7 @@ class LoanService
 
             $echeancesRestantes = $loan->schedules()->where('statut', '!=', 'payee')->count();
             if ($echeancesRestantes === 0) {
-                $loan->update(['statut' => 'solde']);
+                $loan->forceFill(['statut' => 'solde'])->save();
             }
 
             return $repayment;

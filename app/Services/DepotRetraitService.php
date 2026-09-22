@@ -43,7 +43,7 @@ class DepotRetraitService
                 'operation_id' => $options['operation_id'] ?? null,
             ]);
 
-            $compte->update(['solde' => $nouveauSolde]);
+            $compte->actualiserSolde($nouveauSolde);
 
             $this->journaliser($agent, 'transaction.depot', $transaction, [
                 'montant' => $montant,
@@ -90,7 +90,7 @@ class DepotRetraitService
                 'operation_id' => $options['operation_id'] ?? null,
             ]);
 
-            $compte->update(['solde' => $nouveauSolde]);
+            $compte->actualiserSolde($nouveauSolde);
 
             $this->journaliser($agent, 'transaction.retrait', $transaction, [
                 'montant' => $montant,

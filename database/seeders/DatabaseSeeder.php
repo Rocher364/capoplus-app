@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             }
 
             $user = User::firstOrNew(['email' => $compte['email']]);
-            $user->fill([
+            $user->forceFill([
                 'name' => $compte['name'],
                 'role' => $compte['role'],
                 'statut' => 'actif',

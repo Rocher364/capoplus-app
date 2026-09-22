@@ -61,12 +61,13 @@ class AuthenticationAndSessionSecurityTest extends TestCase
             'cree_par_id' => $this->admin->id,
         ]);
 
-        $this->account = Account::create([
-            'member_id' => $this->member->id,
+        $this->account = (new Account())->forceFill([
+            'member_id'     => $this->member->id,
             'numero_compte' => 'CP-SESS-001',
-            'solde' => 100.00,
-            'statut' => 'actif',
+            'solde'         => 100.00,
+            'statut'        => 'actif',
         ]);
+        $this->account->save();
     }
 
     /**
@@ -80,7 +81,7 @@ class AuthenticationAndSessionSecurityTest extends TestCase
         $response->assertOk();
 
         // Le compte est désactivé en base
-        $this->agent->update(['statut' => 'inactif']);
+        $this->agent->forceFill(['statut' => 'inactif'])->save();
 
         // Requête suivante avec la même session
         $nextResponse = $this->get(route('accounts.index'));
@@ -130,7 +131,7 @@ class AuthenticationAndSessionSecurityTest extends TestCase
         $this->assertGuest();
 
         // Désactivation du compte
-        $this->agent->update(['statut' => 'inactif']);
+        $this->agent->forceFill(['statut' => 'inactif'])->save();
 
         // Tentative de connexion -> refusée
         $failedResponse = $this->post(route('login'), [
@@ -250,7 +251,7 @@ class AuthenticationAndSessionSecurityTest extends TestCase
         $this->actingAs($this->agent);
 
         // Désactivation du compte
-        $this->agent->update(['statut' => 'inactif']);
+        $this->agent->forceFill(['statut' => 'inactif'])->save();
 
         // Tentative d'effectuer un dépôt
         $response = $this->post(route('accounts.depot', $this->account), [
