@@ -13,33 +13,8 @@
     </button>
 </div>
 
-<section class="mb-6 bg-rose-50 border border-rose-300 rounded-2xl shadow-sm p-5 no-print">
-    <div class="flex items-start gap-3 mb-4">
-        <div class="mt-0.5 text-rose-600" aria-hidden="true">!</div>
-        <div>
-            <h2 class="text-sm font-bold text-rose-900 uppercase tracking-wider">Zone dangereuse</h2>
-            <p class="text-sm text-rose-800 mt-1">Cette action supprime définitivement tous les membres, leurs données financières et l'historique. Les utilisateurs seront conservés.</p>
-        </div>
-    </div>
-    <form method="POST" action="{{ route('director.purger-donnees') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3" onsubmit="return confirm('Derniere confirmation : toutes les donnees des membres seront supprimees definitivement. Continuer ?');">
-        @csrf
-        <label class="block">
-            <span class="block text-xs font-bold text-rose-900 mb-1">Mot de passe actuel</span>
-            <input type="password" name="mot_de_passe_actuel" required autocomplete="current-password"
-                   class="w-full rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none">
-        </label>
-        <label class="block">
-            <span class="block text-xs font-bold text-rose-900 mb-1">Ecrire: VIDER LES DONNEES</span>
-            <input type="text" name="confirmation" required autocomplete="off" spellcheck="false"
-                   class="w-full rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none">
-        </label>
-        <div class="flex items-end">
-            <button type="submit" class="w-full rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
-                Effacer toutes les donnees
-            </button>
-        </div>
-    </form>
-</section>
+{{-- VULN-04 : La section "Zone dangereuse" (purge massive) a ete supprimee.
+     Pour reinitialiser la base en dev/test : php artisan migrate:fresh --seed --}}
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <div class="bg-white rounded-2xl border border-slate-300 shadow-md p-5 lg:col-span-1">

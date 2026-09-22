@@ -8,7 +8,6 @@ use App\Services\ActivityLogger;
 use App\Services\ReportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DirectorController extends Controller
@@ -108,40 +107,18 @@ class DirectorController extends Controller
         return back()->with('success', 'Mot de passe mis a jour avec succes.');
     }
 
+    /**
+     * VULN-04 : Methode desactivee.
+     *
+     * La purge massive de donnees financieres et de la piste d'audit
+     * ne doit jamais etre accessible depuis l'application de production.
+     *
+     * Pour reinitialiser la base en dev/test :
+     *   php artisan migrate:fresh --seed
+     */
     public function purgerDonnees(Request $request)
     {
-        $data = $request->validate([
-            'mot_de_passe_actuel' => ['required', 'string'],
-            'confirmation' => ['required', 'in:VIDER LES DONNEES'],
-        ], [
-            'confirmation.in' => 'La phrase de confirmation est incorrecte.',
-        ]);
-
-        if (! Hash::check($data['mot_de_passe_actuel'], $request->user()->password)) {
-            return back()->withErrors(['mot_de_passe_actuel' => 'Le mot de passe actuel est incorrect.']);
-        }
-
-        $supprimes = DB::transaction(function (): array {
-            $tables = [
-                'repayments',
-                'loan_schedules',
-                'loans',
-                'transactions',
-                'accounts',
-                'members',
-                'audit_logs',
-            ];
-            $supprimes = [];
-
-            foreach ($tables as $table) {
-                $supprimes[$table] = DB::table($table)->count();
-                DB::table($table)->delete();
-            }
-
-            return $supprimes;
-        });
-
-        return back()->with('success', 'Toutes les donnees des membres, leurs donnees financieres et leur historique ont ete supprimees.');
+        abort(403, 'Cette fonctionnalite a ete desactivee pour des raisons de securite.');
     }
 
     /**

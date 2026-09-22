@@ -56,9 +56,10 @@ Route::middleware(['auth', 'ensure.auditeur'])->prefix('direction')->name('direc
     Route::get('/historique', [DirectorController::class, 'historique'])->name('historique');
     Route::get('/parametres', [DirectorController::class, 'parametres'])->name('parametres');
     Route::post('/parametres/mot-de-passe', [DirectorController::class, 'changerMotDePasse'])->name('motdepasse');
-    Route::post('/purger-donnees', [DirectorController::class, 'purgerDonnees'])
-        ->middleware('throttle:3,1')
-        ->name('purger-donnees');
+    // VULN-04 : La route POST /purger-donnees a ete supprimee.
+    // La purge massive de donnees financieres et de la piste d'audit
+    // ne doit pas etre accessible depuis l'application de production.
+    // Pour reinitialiser la base en dev/test : php artisan migrate:fresh --seed
     Route::get('/utilisateurs', [DirectorController::class, 'utilisateurs'])->name('utilisateurs');
     Route::post('/utilisateurs/{utilisateur}/mot-de-passe', [DirectorController::class, 'reinitialiserMotDePasse'])->name('utilisateurs.motdepasse');
 });
