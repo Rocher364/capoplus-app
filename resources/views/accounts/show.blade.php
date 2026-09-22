@@ -36,17 +36,21 @@
             @if ($account->statut === 'bloque')
                 <div class="mt-6 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-800 no-print">
                     <strong class="font-bold">Compte bloque.</strong> {{ $account->raison_blocage }}
+                    @can('debloquer', $account)
                     <form action="{{ route('accounts.debloquer', $account) }}" method="POST" class="mt-2">
                         @csrf
                         <button class="text-sm font-bold text-red-700 hover:text-red-900 underline transition">Debloquer ce compte</button>
                     </form>
+                    @endcan
                 </div>
             @else
+                @can('bloquer', $account)
                 <form action="{{ route('accounts.bloquer', $account) }}" method="POST" class="mt-6 flex gap-2 no-print">
                     @csrf
                     <input type="text" name="raison_blocage" placeholder="Raison du blocage" class="flex-1 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 text-sm px-4 py-2.5 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition outline-none" required>
                     <button class="px-5 py-2.5 rounded-xl bg-red-50 text-red-700 text-sm font-semibold border border-red-200 hover:bg-red-100 hover:text-red-800 shrink-0 transition active:scale-[0.98]">Bloquer</button>
                 </form>
+                @endcan
             @endif
         </div>
 

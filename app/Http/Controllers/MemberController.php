@@ -94,6 +94,8 @@ class MemberController extends Controller
     /** Suppression protégée : impossible si le compte du membre possède déjà des transactions ou du solde */
     public function destroy(Request $request, Member $member)
     {
+        $this->authorize('delete', $member);
+
         $account = $member->account;
 
         if ($account && ($account->solde > 0 || $account->transactions()->exists() || $account->loans()->exists())) {

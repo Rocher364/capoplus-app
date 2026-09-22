@@ -69,6 +69,8 @@ class AccountController extends Controller
 
     public function bloquer(Request $request, Account $account)
     {
+        $this->authorize('bloquer', $account);
+
         $data = $request->validate([
             'raison_blocage' => ['required', 'string', 'max:500'],
         ]);
@@ -90,6 +92,8 @@ class AccountController extends Controller
 
     public function debloquer(Request $request, Account $account)
     {
+        $this->authorize('debloquer', $account);
+
         $account->update([
             'statut' => 'actif',
             'raison_blocage' => null,

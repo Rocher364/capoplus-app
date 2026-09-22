@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'redirect.auditeur' => \App\Http\Middleware\RedirectIfNotAuditeur::class,
+            'redirect.auditeur' => \App\Http\Middleware\RedirectIfAuditeur::class,
             'ensure.auditeur'   => \App\Http\Middleware\EnsureAuditeur::class,
         ]);
     })

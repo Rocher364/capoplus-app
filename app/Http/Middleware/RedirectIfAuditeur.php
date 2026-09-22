@@ -16,6 +16,10 @@ class RedirectIfAuditeur
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->user() && $request->user()->isAuditeur()) {
+            if ($request->expectsJson()) {
+                abort(403, 'Acces interdit : les auditeurs ne peuvent pas acceder aux routes operationnelles.');
+            }
+
             return redirect()->route('director.dashboard');
         }
 

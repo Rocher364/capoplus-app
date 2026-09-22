@@ -76,8 +76,10 @@ class LoanController extends Controller
 
     public function approuver(Request $request, Loan $loan)
     {
+        $this->authorize('approve', $loan);
+
         $data = $request->validate([
-            'montant_approuve' => ['nullable', 'numeric', 'min:1'],
+            'montant_approuve' => ['nullable', 'numeric', 'min:1', 'max:' . $loan->montant_demande],
         ]);
 
         $this->loanService->approuver($loan, $request->user(), $data['montant_approuve'] ?? null);
@@ -92,6 +94,8 @@ class LoanController extends Controller
 
     public function rejeter(Request $request, Loan $loan)
     {
+        $this->authorize('reject', $loan);
+
         $data = $request->validate([
             'justification_decision' => ['required', 'string', 'max:1000'],
         ]);
@@ -108,6 +112,8 @@ class LoanController extends Controller
 
     public function decaisser(Request $request, Loan $loan, DepotRetraitService $depotService)
     {
+        $this->authorize('disburse', $loan);
+
         $this->loanService->decaisser($loan, $request->user(), $depotService);
 
         ActivityLogger::log($request->user(), 'pret.decaisse', $loan, [

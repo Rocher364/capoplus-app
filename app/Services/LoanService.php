@@ -43,9 +43,25 @@ class LoanService
             throw new InvalidArgumentException('Seul un pret en demande peut etre approuve.');
         }
 
+        // Defense-in-depth : verification du role
+        if (! $admin->isAdmin()) {
+            throw new \App\Exceptions\UnauthorizedActionException('Seul un administrateur peut approuver un pret.');
+        }
+
+        // Defense-in-depth : prevention de l'auto-approbation
+        if ($admin->id === $loan->demande_par_id) {
+            throw new \App\Exceptions\UnauthorizedActionException('Vous ne pouvez pas approuver un pret que vous avez demande.');
+        }
+
+        // Defense-in-depth : le montant approuve ne peut pas depasser le montant demande
+        $montantFinal = $montantApprouve ?? (float) $loan->montant_demande;
+        if ($montantFinal > (float) $loan->montant_demande) {
+            throw new InvalidArgumentException('Le montant approuve ne peut pas depasser le montant demande.');
+        }
+
         $loan->update([
             'statut' => 'approuve',
-            'montant_approuve' => $montantApprouve ?? $loan->montant_demande,
+            'montant_approuve' => $montantFinal,
             'approuve_par_id' => $admin->id,
             'date_decision' => now(),
         ]);
@@ -57,6 +73,16 @@ class LoanService
     {
         if ($loan->statut !== LoanStatus::Demande) {
             throw new InvalidArgumentException('Seul un pret en demande peut etre rejete.');
+        }
+
+        // Defense-in-depth : verification du role
+        if (! $admin->isAdmin()) {
+            throw new \App\Exceptions\UnauthorizedActionException('Seul un administrateur peut rejeter un pret.');
+        }
+
+        // Defense-in-depth : prevention de l'auto-rejet
+        if ($admin->id === $loan->demande_par_id) {
+            throw new \App\Exceptions\UnauthorizedActionException('Vous ne pouvez pas rejeter un pret que vous avez demande.');
         }
 
         $loan->update([
@@ -72,11 +98,19 @@ class LoanService
     /** Decaisse le pret : verse les fonds sur le compte et genere l'echeancier. */
     public function decaisser(Loan $loan, User $agent, DepotRetraitService $depotService): Loan
     {
-        if ($loan->statut !== LoanStatus::Approuve || $loan->montant_approuve === null) {
-            throw new InvalidArgumentException('Seul un pret approuve avec un montant valide peut etre decaisse.');
+        // Defense-in-depth : verification du role
+        if (! $agent->isAdmin()) {
+            throw new \App\Exceptions\UnauthorizedActionException('Seul un administrateur peut decaisser un pret.');
         }
 
         return DB::transaction(function () use ($loan, $agent, $depotService) {
+            // Verrouillage pessimiste pour eviter le double decaissement
+            $loan = Loan::where('id', $loan->id)->lockForUpdate()->first();
+
+            if ($loan->statut !== LoanStatus::Approuve || $loan->montant_approuve === null) {
+                throw new InvalidArgumentException('Seul un pret approuve avec un montant valide peut etre decaisse.');
+            }
+
             $depotService->deposer($loan->account, (float) $loan->montant_approuve, $agent, [
                 'moyen' => 'especes',
                 'description' => "Decaissement pret {$loan->numero_pret}",

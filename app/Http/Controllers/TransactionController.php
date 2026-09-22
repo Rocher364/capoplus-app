@@ -26,6 +26,8 @@ class TransactionController extends Controller
     /** Enregistre un depot sur le compte. */
     public function deposer(StoreTransactionRequest $request, Account $account)
     {
+        $this->authorize('deposer', $account);
+
         try {
             $transaction = $this->depotRetraitService->deposer(
                 $account,
@@ -45,6 +47,8 @@ class TransactionController extends Controller
     /** Enregistre un retrait sur le compte. */
     public function retirer(StoreTransactionRequest $request, Account $account)
     {
+        $this->authorize('retirer', $account);
+
         try {
             $transaction = $this->depotRetraitService->retirer(
                 $account,

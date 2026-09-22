@@ -115,6 +115,7 @@
         @if ($loan->statut->value === 'demande')
             <div class="bg-white rounded-2xl border border-slate-300 shadow-md p-6">
                 <h3 class="font-bold text-slate-900 mb-4 text-base border-b border-slate-200 pb-2">Decision</h3>
+                @can('approve', $loan)
                 <form action="{{ route('loans.approuver', $loan) }}" method="POST" class="space-y-3 mb-5">
                     @csrf
                     <div>
@@ -125,6 +126,8 @@
                         Approuver
                     </button>
                 </form>
+                @endcan
+                @can('reject', $loan)
                 <form action="{{ route('loans.rejeter', $loan) }}" method="POST" class="space-y-3 pt-3 border-t border-slate-200">
                     @csrf
                     <div>
@@ -135,10 +138,12 @@
                         Rejeter
                     </button>
                 </form>
+                @endcan
             </div>
         @endif
 
         @if ($loan->statut->value === 'approuve')
+            @can('disburse', $loan)
             <div class="bg-white rounded-2xl border border-slate-300 shadow-md p-6">
                 <h3 class="font-bold text-slate-900 mb-2 text-base border-b border-slate-200 pb-2">Decaissement</h3>
                 <p class="text-xs font-medium text-slate-600 mb-4 leading-relaxed">
@@ -152,6 +157,7 @@
                     </button>
                 </form>
             </div>
+            @endcan
         @endif
 
         <div class="bg-white rounded-2xl border border-slate-300 shadow-md p-6">
