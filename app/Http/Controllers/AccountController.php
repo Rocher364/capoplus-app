@@ -75,12 +75,18 @@ class AccountController extends Controller
             'raison_blocage' => ['required', 'string', 'max:500'],
         ]);
 
+        $anciennes = [
+            'statut' => $account->statut,
+            'raison_blocage' => $account->raison_blocage,
+        ];
+
         $account->bloquer($data['raison_blocage'], $request->user());
 
         ActivityLogger::log($request->user(), 'compte.bloque', $account, [
             'numero_compte' => $account->numero_compte,
+            'statut' => 'bloque',
             'raison' => $data['raison_blocage'],
-        ]);
+        ], $anciennes);
 
         return back()->with('success', "Compte {$account->numero_compte} bloque.");
     }
@@ -89,11 +95,17 @@ class AccountController extends Controller
     {
         $this->authorize('debloquer', $account);
 
+        $anciennes = [
+            'statut' => $account->statut,
+            'raison_blocage' => $account->raison_blocage,
+        ];
+
         $account->debloquer();
 
         ActivityLogger::log($request->user(), 'compte.debloque', $account, [
             'numero_compte' => $account->numero_compte,
-        ]);
+            'statut' => 'actif',
+        ], $anciennes);
 
         return back()->with('success', "Compte {$account->numero_compte} debloque.");
     }

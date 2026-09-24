@@ -79,12 +79,17 @@ class MemberController extends Controller
     {
         $data = $this->validerDonnees($request, $member->id);
 
+        $anciennesValeurs = $member->only(array_keys($data));
         $member->update($data);
+        $nouvellesValeurs = $member->only(array_keys($data));
 
-        ActivityLogger::log($request->user(), 'membre.modifie', $member, [
-            'numero_membre' => $member->numero_membre,
-            'nom'           => "{$member->prenom} {$member->nom}",
-        ]);
+        ActivityLogger::log(
+            $request->user(),
+            'membre.modifie',
+            $member,
+            $nouvellesValeurs,
+            $anciennesValeurs
+        );
 
         return redirect()
             ->route('members.index')

@@ -28,5 +28,10 @@ class UpdateUserPassword implements UpdatesUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        \App\Services\ActivityLogger::log($user, 'auth.motdepasse_modifie', $user, [
+            'email' => $user->email,
+            'statut' => 'modifie',
+        ]);
     }
 }

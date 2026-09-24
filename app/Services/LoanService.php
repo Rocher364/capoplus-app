@@ -21,7 +21,7 @@ class LoanService
 {
     public function demander(Member $member, Account $account, array $data, User $agent): Loan
     {
-        return Loan::create([
+        $loan = Loan::create([
             'member_id' => $member->id,
             'account_id' => $account->id,
             'numero_pret' => $this->genererNumeroPret(),
@@ -35,6 +35,16 @@ class LoanService
             'demande_par_id' => $agent->id,
             'date_demande' => now(),
         ]);
+
+        ActivityLogger::log($agent, 'pret.demande', $loan, [
+            'numero_pret' => $loan->numero_pret,
+            'montant_demande' => $data['montant_demande'],
+            'compte_id' => $account->id,
+            'member_id' => $member->id,
+            'statut' => 'demande',
+        ]);
+
+        return $loan->fresh();
     }
 
     public function approuver(Loan $loan, User $admin, ?float $montantApprouve = null): Loan
@@ -54,10 +64,15 @@ class LoanService
         }
 
         // Defense-in-depth : le montant approuve ne peut pas depasser le montant demande
-        $montantFinal = $montantApprouve ?? (float) $loan->montant_demande;
-        if ($montantFinal > (float) $loan->montant_demande) {
+        $montantFinal = $montantApprouve !== null ? number_format($montantApprouve, 2, '.', '') : (string) $loan->montant_demande;
+        if (bccomp($montantFinal, (string) $loan->montant_demande, 2) > 0) {
             throw new InvalidArgumentException('Le montant approuve ne peut pas depasser le montant demande.');
         }
+
+        $anciennes = [
+            'statut' => $loan->statut->value ?? (string) $loan->statut,
+            'montant_approuve' => $loan->montant_approuve ? (string) $loan->montant_approuve : null,
+        ];
 
         $loan->forceFill([
             'statut' => 'approuve',
@@ -65,6 +80,14 @@ class LoanService
             'approuve_par_id' => $admin->id,
             'date_decision' => now(),
         ])->save();
+
+        ActivityLogger::log($admin, 'pret.approuve', $loan, [
+            'numero_pret' => $loan->numero_pret,
+            'compte_id' => $loan->account_id,
+            'member_id' => $loan->member_id,
+            'montant_approuve' => $montantFinal,
+            'statut' => 'approuve',
+        ], $anciennes);
 
         return $loan->fresh();
     }
@@ -85,12 +108,24 @@ class LoanService
             throw new \App\Exceptions\UnauthorizedActionException('Vous ne pouvez pas rejeter un pret que vous avez demande.');
         }
 
+        $anciennes = [
+            'statut' => $loan->statut->value ?? (string) $loan->statut,
+        ];
+
         $loan->forceFill([
             'statut' => 'rejete',
             'justification_decision' => $justification,
             'approuve_par_id' => $admin->id,
             'date_decision' => now(),
         ])->save();
+
+        ActivityLogger::log($admin, 'pret.rejete', $loan, [
+            'numero_pret' => $loan->numero_pret,
+            'compte_id' => $loan->account_id,
+            'member_id' => $loan->member_id,
+            'justification' => $justification,
+            'statut' => 'rejete',
+        ], $anciennes);
 
         return $loan->fresh();
     }
@@ -105,13 +140,17 @@ class LoanService
 
         return DB::transaction(function () use ($loan, $agent, $depotService) {
             // Verrouillage pessimiste pour eviter le double decaissement
-            $loan = Loan::where('id', $loan->id)->lockForUpdate()->first();
+            $loan = Loan::where('id', $loan->id)->lockForUpdate()->firstOrFail();
 
-            if ($loan->statut !== LoanStatus::Approuve || $loan->montant_approuve === null) {
+            if ($loan->statut !== LoanStatus::Approuve || $loan->montant_approuve === null || bccomp((string) $loan->montant_approuve, '0.00', 2) <= 0) {
                 throw new InvalidArgumentException('Seul un pret approuve avec un montant valide peut etre decaisse.');
             }
 
-            $depotService->deposer($loan->account, (float) $loan->montant_approuve, $agent, [
+            $anciennes = [
+                'statut' => $loan->statut->value ?? (string) $loan->statut,
+            ];
+
+            $depotService->deposer($loan->account, (string) $loan->montant_approuve, $agent, [
                 'moyen' => 'especes',
                 'description' => "Decaissement pret {$loan->numero_pret}",
                 'operation_type' => Loan::class,
@@ -119,11 +158,19 @@ class LoanService
             ]);
 
             $loan->forceFill([
-                'statut' => 'decaisse',
+                'statut' => LoanStatus::Decaisse,
                 'date_decaissement' => now(),
             ])->save();
 
             $this->genererEcheancier($loan->fresh());
+
+            ActivityLogger::log($agent, 'pret.decaisse', $loan, [
+                'numero_pret' => $loan->numero_pret,
+                'compte_id' => $loan->account_id,
+                'member_id' => $loan->member_id,
+                'montant' => (string) $loan->montant_approuve,
+                'statut' => 'decaisse',
+            ], $anciennes);
 
             return $loan->fresh();
         });
@@ -132,28 +179,43 @@ class LoanService
     /** Genere l'echeancier selon la methode choisie (simple, degressif, constant). */
     protected function genererEcheancier(Loan $loan): void
     {
-        $montant = (float) $loan->montant_approuve;
+        $montant = (string) $loan->montant_approuve;
         $duree = (int) $loan->duree_mois;
         $tauxAnnuel = (float) $loan->taux_interet / 100;
         $tauxMensuel = $tauxAnnuel / 12;
         $depart = $loan->date_decaissement ?? now();
 
         $lignes = match ($loan->methode_calcul) {
-            'simple' => $this->echeancierSimple($montant, $duree, $tauxAnnuel),
-            'degressif' => $this->echeancierDegressif($montant, $duree, $tauxMensuel),
-            default => $this->echeancierConstant($montant, $duree, $tauxMensuel),
+            'simple' => $this->echeancierSimple((float) $montant, $duree, $tauxAnnuel),
+            'degressif' => $this->echeancierDegressif((float) $montant, $duree, $tauxMensuel),
+            default => $this->echeancierConstant((float) $montant, $duree, $tauxMensuel),
         };
 
+        $cumulCapital = '0.00';
+        $totalLignes = count($lignes);
+
         foreach ($lignes as $i => $ligne) {
+            $isLast = ($i === $totalLignes - 1);
+            if ($isLast) {
+                // VULN-11 : Ajustement de la derniere echeance par difference pour garantir SUM(capital) == montant_approuve
+                $capital = bcsub($montant, $cumulCapital, 2);
+            } else {
+                $capital = number_format(round($ligne['capital'], 2), 2, '.', '');
+                $cumulCapital = bcadd($cumulCapital, $capital, 2);
+            }
+
+            $interet = number_format(round($ligne['interet'], 2), 2, '.', '');
+            $montantTotal = bcadd($capital, $interet, 2);
+
             LoanSchedule::create([
                 'loan_id' => $loan->id,
                 'numero_echeance' => $i + 1,
                 'date_echeance' => $depart->copy()->addMonths($i + 1),
-                'capital' => round($ligne['capital'], 2),
-                'interet' => round($ligne['interet'], 2),
-                'montant_total' => round($ligne['capital'] + $ligne['interet'], 2),
-                'montant_paye' => 0,
-                'solde_restant' => round($ligne['capital'] + $ligne['interet'], 2),
+                'capital' => $capital,
+                'interet' => $interet,
+                'montant_total' => $montantTotal,
+                'montant_paye' => '0.00',
+                'solde_restant' => $montantTotal,
                 'statut' => 'a_venir',
             ]);
         }
@@ -209,36 +271,68 @@ class LoanService
     }
 
     /** Enregistre un remboursement contre une echeance precise. */
-    public function enregistrerRemboursement(LoanSchedule $echeance, float $montant, User $agent, array $options = []): Repayment
+    public function enregistrerRemboursement(LoanSchedule $echeance, float|string $montant, User $agent, array $options = []): Repayment
     {
-        if ($montant <= 0) {
+        $montantStr = is_numeric($montant) ? number_format((float) $montant, 2, '.', '') : '0.00';
+
+        if (bccomp($montantStr, '0.00', 2) <= 0) {
             throw new InvalidArgumentException('Le montant doit etre superieur a zero.');
         }
 
-        return DB::transaction(function () use ($echeance, $montant, $agent, $options) {
-            $ligne = LoanSchedule::where('id', $echeance->id)->lockForUpdate()->first();
-            $loan = $ligne->loan;
-            $restant = (float) $ligne->solde_restant;
+        // Defense-in-depth : verification de role (un auditeur ne peut pas enregistrer de remboursement)
+        if ($agent->isAuditeur()) {
+            throw new \App\Exceptions\UnauthorizedActionException('Un auditeur ne peut pas enregistrer de remboursement.');
+        }
 
-            if ($loan->statut !== LoanStatus::Decaisse) {
-                throw new InvalidArgumentException('Les remboursements sont possibles uniquement pour un pret decaisse.');
+        // Recuperer l'identite unique du paiement (reference ou idempotency_key)
+        $reference = $options['reference'] ?? $options['idempotency_key'] ?? null;
+
+        // Idempotence : si une reference de remboursement est fournie et existe deja avant transaction
+        if (! empty($reference)) {
+            $existing = Repayment::where('reference', $reference)->first();
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        return DB::transaction(function () use ($echeance, $montantStr, $agent, $options, $reference) {
+            $ligne = LoanSchedule::where('id', $echeance->id)->lockForUpdate()->firstOrFail();
+            $loan = Loan::where('id', $ligne->loan_id)->lockForUpdate()->firstOrFail();
+
+            // Re-verification d'idempotence a l'interieur du verrou pour les requetes concurrentes
+            if (! empty($reference)) {
+                $existing = Repayment::where('reference', $reference)->first();
+                if ($existing) {
+                    return $existing;
+                }
             }
 
-            if ($montant > $restant) {
+            // VULN-06 : Les prets decaisses ET en retard peuvent recevoir des remboursements
+            if (! in_array($loan->statut, [LoanStatus::Decaisse, LoanStatus::EnRetard])) {
+                throw new InvalidArgumentException('Les remboursements sont possibles uniquement pour un pret decaisse ou en retard.');
+            }
+
+            if ($ligne->statut === 'payee' || bccomp((string) $ligne->solde_restant, '0.00', 2) <= 0) {
+                throw new InvalidArgumentException('Cette echeance est deja integralement payee.');
+            }
+
+            if (bccomp($montantStr, (string) $ligne->solde_restant, 2) > 0) {
                 throw new InvalidArgumentException('Le montant depasse le solde restant de cette echeance.');
             }
 
-            $transaction = app(DepotRetraitService::class)->retirer($loan->account, $montant, $agent, [
+            $transaction = app(DepotRetraitService::class)->retirer($loan->account, $montantStr, $agent, [
                 'moyen' => $options['moyen'] ?? 'especes',
                 'description' => "Remboursement pret {$loan->numero_pret}, echeance {$ligne->numero_echeance}",
             ]);
+
+            $refFinale = $reference ?? ('REM-'.now()->format('Ymd').'-'.strtoupper(Str::random(6)));
 
             $repayment = Repayment::create([
                 'loan_schedule_id' => $ligne->id,
                 'user_id' => $agent->id,
                 'transaction_id' => $transaction->id,
-                'reference' => 'REM-'.now()->format('Ymd').'-'.strtoupper(Str::random(6)),
-                'montant' => $montant,
+                'reference' => $refFinale,
+                'montant' => $montantStr,
                 'moyen' => $options['moyen'] ?? 'especes',
                 'effectue_le' => now(),
                 'notes' => $options['notes'] ?? null,
@@ -249,19 +343,45 @@ class LoanService
                 'operation_id' => $repayment->id,
             ]);
 
-            $nouveauPaye = bcadd((string) $ligne->montant_paye, (string) $montant, 2);
+            $nouveauPaye = bcadd((string) $ligne->montant_paye, $montantStr, 2);
             $nouveauRestant = bcsub((string) $ligne->montant_total, $nouveauPaye, 2);
+            $isPayee = bccomp($nouveauRestant, '0.00', 2) <= 0;
 
             $ligne->update([
                 'montant_paye' => $nouveauPaye,
-                'solde_restant' => max(0, (float) $nouveauRestant),
-                'statut' => (float) $nouveauRestant <= 0 ? 'payee' : 'partiellement_payee',
+                'solde_restant' => $isPayee ? '0.00' : $nouveauRestant,
+                'statut' => $isPayee ? 'payee' : 'partiellement_payee',
             ]);
 
-            $echeancesRestantes = $loan->schedules()->where('statut', '!=', 'payee')->count();
-            if ($echeancesRestantes === 0) {
-                $loan->forceFill(['statut' => 'solde'])->save();
+            // Mise a jour du statut du pret
+            $echeancesNonPayees = $loan->schedules()->where('statut', '!=', 'payee')->count();
+            if ($echeancesNonPayees === 0) {
+                $loan->forceFill(['statut' => LoanStatus::Solde])->save();
+            } elseif ($loan->statut === LoanStatus::EnRetard) {
+                // Si le pret etait en retard et qu'aucune echeance n'est plus en retard, repasser en decaisse
+                $echeancesEnRetard = $loan->schedules()->where('statut', 'en_retard')->count();
+                if ($echeancesEnRetard === 0) {
+                    $loan->forceFill(['statut' => LoanStatus::Decaisse])->save();
+                }
             }
+
+            ActivityLogger::log($agent, 'pret.remboursement', $loan, [
+                'numero_pret' => $loan->numero_pret,
+                'compte_id' => $loan->account_id,
+                'membre_id' => $loan->member_id,
+                'loan_id' => $loan->id,
+                'loan_schedule_id' => $ligne->id,
+                'repayment_id' => $repayment->id,
+                'transaction_id' => $transaction->id,
+                'echeance' => $ligne->numero_echeance,
+                'montant' => $montantStr,
+                'reference' => $repayment->reference,
+                'solde_restant_echeance' => $isPayee ? '0.00' : $nouveauRestant,
+                'statut_echeance' => $isPayee ? 'payee' : 'partiellement_payee',
+            ], [
+                'solde_restant_echeance' => (string) $echeance->solde_restant,
+                'statut_echeance' => $echeance->statut,
+            ]);
 
             return $repayment;
         });

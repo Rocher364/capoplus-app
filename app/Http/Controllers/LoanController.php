@@ -56,12 +56,6 @@ class LoanController extends Controller
 
         $loan = $this->loanService->demander($member, $account, $data, $request->user());
 
-        ActivityLogger::log($request->user(), 'pret.demande', $loan, [
-            'numero_pret' => $loan->numero_pret,
-            'montant' => $loan->montant_demande,
-            'membre' => "{$member->prenom} {$member->nom}",
-        ]);
-
         return redirect()
             ->route('loans.show', $loan)
             ->with('success', "Demande de pret {$loan->numero_pret} enregistree.");
@@ -84,11 +78,6 @@ class LoanController extends Controller
 
         $this->loanService->approuver($loan, $request->user(), $data['montant_approuve'] ?? null);
 
-        ActivityLogger::log($request->user(), 'pret.approuve', $loan, [
-            'numero_pret' => $loan->numero_pret,
-            'montant_approuve' => $data['montant_approuve'] ?? $loan->montant_demande,
-        ]);
-
         return back()->with('success', "Pret {$loan->numero_pret} approuve.");
     }
 
@@ -102,11 +91,6 @@ class LoanController extends Controller
 
         $this->loanService->rejeter($loan, $request->user(), $data['justification_decision']);
 
-        ActivityLogger::log($request->user(), 'pret.rejete', $loan, [
-            'numero_pret' => $loan->numero_pret,
-            'justification' => $data['justification_decision'],
-        ]);
-
         return back()->with('success', "Pret {$loan->numero_pret} rejete.");
     }
 
@@ -116,20 +100,28 @@ class LoanController extends Controller
 
         $this->loanService->decaisser($loan, $request->user(), $depotService);
 
-        ActivityLogger::log($request->user(), 'pret.decaisse', $loan, [
-            'numero_pret' => $loan->numero_pret,
-            'montant' => $loan->montant_approuve,
-        ]);
-
         return back()->with('success', "Pret {$loan->numero_pret} decaisse, echeancier genere.");
     }
 
     public function rembourser(Request $request, Loan $loan, LoanSchedule $echeance)
     {
+        $this->authorize('repay', $loan);
+
         $data = $request->validate([
             'montant' => ['required', 'numeric', 'decimal:2', 'min:0.01'],
             'moyen' => ['nullable', 'in:especes,cheque,virement,autre'],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'idempotency_key' => ['nullable', 'string', 'max:100'],
         ]);
+
+        $idempotencyKey = $request->header('X-Idempotency-Key')
+            ?? $data['idempotency_key']
+            ?? $data['reference']
+            ?? null;
+
+        if ($idempotencyKey) {
+            $data['reference'] = $idempotencyKey;
+        }
 
         if ($echeance->loan_id !== $loan->id) {
             abort(404);
@@ -140,13 +132,6 @@ class LoanController extends Controller
         } catch (InvalidArgumentException|\App\Exceptions\CompteBloqueException|\App\Exceptions\SoldeInsuffisantException $e) {
             return back()->withErrors(['montant' => $e->getMessage()]);
         }
-
-        ActivityLogger::log($request->user(), 'pret.remboursement', $loan, [
-            'numero_pret' => $loan->numero_pret,
-            'echeance' => $echeance->numero_echeance,
-            'montant' => $data['montant'],
-            'reference' => $repayment->reference,
-        ]);
 
         return back()->with('success', "Remboursement de {$data['montant']} enregistre.");
     }

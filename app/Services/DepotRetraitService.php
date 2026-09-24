@@ -16,18 +16,20 @@ class DepotRetraitService
     /**
      * @throws CompteBloqueException
      */
-    public function deposer(Account $account, float $montant, User $agent, array $options = []): Transaction
+    public function deposer(Account $account, float|string $montant, User $agent, array $options = []): Transaction
     {
-        $this->validerMontant($montant);
+        $this->validerMontant($montant, 'depot', empty($options['operation_type']));
 
         return DB::transaction(function () use ($account, $montant, $agent, $options) {
-            $compte = Account::where('id', $account->id)->lockForUpdate()->first();
+            $compte = Account::where('id', $account->id)->lockForUpdate()->firstOrFail();
 
             if (! $compte->estActif()) {
                 throw new CompteBloqueException;
             }
 
-            $nouveauSolde = bcadd((string) $compte->solde, (string) $montant, 2);
+            $montantStr = is_string($montant) ? $montant : number_format($montant, 2, '.', '');
+            $soldeAvant = (string) $compte->solde;
+            $nouveauSolde = bcadd($soldeAvant, $montantStr, 2);
 
             $transaction = Transaction::create([
                 'account_id' => $compte->id,
@@ -48,7 +50,12 @@ class DepotRetraitService
             $this->journaliser($agent, 'transaction.depot', $transaction, [
                 'montant' => $montant,
                 'compte' => $compte->numero_compte,
+                'account_id' => $compte->id,
+                'transaction_id' => $transaction->id,
+                'reference' => $transaction->reference,
                 'solde_apres' => $nouveauSolde,
+            ], [
+                'solde' => $soldeAvant,
             ]);
 
             return $transaction;
@@ -59,22 +66,25 @@ class DepotRetraitService
      * @throws CompteBloqueException
      * @throws SoldeInsuffisantException
      */
-    public function retirer(Account $account, float $montant, User $agent, array $options = []): Transaction
+    public function retirer(Account $account, float|string $montant, User $agent, array $options = []): Transaction
     {
-        $this->validerMontant($montant);
+        $this->validerMontant($montant, 'retrait');
 
         return DB::transaction(function () use ($account, $montant, $agent, $options) {
-            $compte = Account::where('id', $account->id)->lockForUpdate()->first();
+            $compte = Account::where('id', $account->id)->lockForUpdate()->firstOrFail();
 
             if (! $compte->estActif()) {
                 throw new CompteBloqueException;
             }
 
-            if (bccomp((string) $compte->solde, (string) $montant, 2) < 0) {
+            $montantStr = is_string($montant) ? $montant : number_format($montant, 2, '.', '');
+
+            if (bccomp((string) $compte->solde, $montantStr, 2) < 0) {
                 throw new SoldeInsuffisantException;
             }
 
-            $nouveauSolde = bcsub((string) $compte->solde, (string) $montant, 2);
+            $soldeAvant = (string) $compte->solde;
+            $nouveauSolde = bcsub((string) $compte->solde, $montantStr, 2);
 
             $transaction = Transaction::create([
                 'account_id' => $compte->id,
@@ -95,17 +105,34 @@ class DepotRetraitService
             $this->journaliser($agent, 'transaction.retrait', $transaction, [
                 'montant' => $montant,
                 'compte' => $compte->numero_compte,
+                'account_id' => $compte->id,
+                'transaction_id' => $transaction->id,
+                'reference' => $transaction->reference,
                 'solde_apres' => $nouveauSolde,
+            ], [
+                'solde' => $soldeAvant,
             ]);
 
             return $transaction;
         });
     }
 
-    protected function validerMontant(float $montant): void
+    protected function validerMontant(float|string $montant, string $type = 'depot', bool $verifierPlafond = true): void
     {
-        if ($montant <= 0) {
+        $montantStr = is_string($montant) ? $montant : number_format($montant, 2, '.', '');
+
+        if (bccomp($montantStr, '0.00', 2) <= 0) {
             throw new \InvalidArgumentException('Le montant doit etre superieur a zero.');
+        }
+
+        if ($type === 'depot' && $verifierPlafond) {
+            $maxDeposit = config('capoplus.max_deposit');
+            if ($maxDeposit !== null) {
+                $maxDepositStr = is_string($maxDeposit) ? $maxDeposit : (string) $maxDeposit;
+                if (bccomp($montantStr, $maxDepositStr, 2) > 0) {
+                    throw new \InvalidArgumentException(sprintf('Le montant du depot depasse la limite autorisee (%s HTG).', $maxDepositStr));
+                }
+            }
         }
     }
 
@@ -119,17 +146,8 @@ class DepotRetraitService
         );
     }
 
-    protected function journaliser(User $agent, string $action, Transaction $transaction, array $nouvellesValeurs): void
+    protected function journaliser(User $agent, string $action, Transaction $transaction, array $nouvellesValeurs, ?array $anciennesValeurs = null): void
     {
-        AuditLog::create([
-            'user_id' => $agent->id,
-            'action' => $action,
-            'auditable_type' => Transaction::class,
-            'auditable_id' => $transaction->id,
-            'nouvelles_valeurs' => $nouvellesValeurs,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'created_at' => now(),
-        ]);
+        \App\Services\ActivityLogger::log($agent, $action, $transaction, $nouvellesValeurs, $anciennesValeurs);
     }
 }

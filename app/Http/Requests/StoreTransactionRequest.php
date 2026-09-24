@@ -13,11 +13,18 @@ class StoreTransactionRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'montant' => ['required', 'numeric', 'decimal:2', 'min:0.01'],
             'moyen' => ['nullable', 'in:especes,cheque,virement,autre'],
             'description' => ['nullable', 'string', 'max:255'],
         ];
+
+        $maxDeposit = config('capoplus.max_deposit');
+        if ($this->routeIs('accounts.depot') && $maxDeposit !== null) {
+            $rules['montant'][] = 'max:' . $maxDeposit;
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -26,6 +33,7 @@ class StoreTransactionRequest extends FormRequest
             'montant.required' => 'Le montant est obligatoire.',
             'montant.numeric' => 'Le montant doit etre un nombre.',
             'montant.min' => 'Le montant doit etre superieur a zero.',
+            'montant.max' => 'Le montant depasse le plafond de depot autorise.',
             'moyen.in' => 'Le moyen de paiement selectionne est invalide.',
         ];
     }

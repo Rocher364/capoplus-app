@@ -36,6 +36,32 @@ class AuditLog extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (AuditLog $log) {
+            throw new \RuntimeException("Les journaux d'audit sont immuables et ne peuvent pas être modifiés.");
+        });
+
+        static::deleting(function (AuditLog $log) {
+            throw new \RuntimeException("Les journaux d'audit sont immuables et ne peuvent pas être supprimés.");
+        });
+    }
+
+    public function update(array $attributes = [], array $options = []): bool
+    {
+        throw new \RuntimeException("Les journaux d'audit sont immuables et ne peuvent pas être modifiés.");
+    }
+
+    public function delete(): ?bool
+    {
+        throw new \RuntimeException("Les journaux d'audit sont immuables et ne peuvent pas être supprimés.");
+    }
+
+    public function forceDelete(): ?bool
+    {
+        throw new \RuntimeException("Les journaux d'audit sont immuables et ne peuvent pas être supprimés.");
+    }
+
     /** Auteur de l'action (nullable pour les evenements systeme). */
     public function user(): BelongsTo
     {

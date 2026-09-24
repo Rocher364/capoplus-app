@@ -35,6 +35,21 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updated(function (User $user) {
+            if ($user->wasChanged('statut')) {
+                \App\Services\ActivityLogger::log(
+                    auth()->user() ?? $user,
+                    $user->statut === 'actif' ? 'utilisateur.active' : 'utilisateur.desactive',
+                    $user,
+                    ['statut' => $user->statut, 'email' => $user->email],
+                    ['statut' => $user->getOriginal('statut')]
+                );
+            }
+        });
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;

@@ -104,6 +104,11 @@ class DirectorController extends Controller
 
         $user->update(['password' => Hash::make($data['nouveau_mot_de_passe'])]);
 
+        ActivityLogger::log($user, 'auth.motdepasse_modifie', $user, [
+            'email' => $user->email,
+            'statut' => 'modifie',
+        ]);
+
         return back()->with('success', 'Mot de passe mis a jour avec succes.');
     }
 
