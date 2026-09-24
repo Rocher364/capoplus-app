@@ -1,0 +1,20 @@
+# Gitleaks configuration for CAPO+
+title = "CAPO+ Secret Scanning Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowed patterns and test stubs"
+paths = [
+    '''tests/.*''',
+    '''\.env\.example''',
+    '''phpunit\.xml''',
+]
+regexes = [
+    '''Password123!''',
+    '''NewSecretPassword999!''',
+    '''UltraSecureDirectorPass99!''',
+    '''NewAgentPassword456!''',
+    '''AttemptedWrongPassword999!''',
+]
