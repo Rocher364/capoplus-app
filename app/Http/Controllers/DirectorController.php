@@ -67,12 +67,14 @@ class DirectorController extends Controller
         }
 
         if ($request->filled('q')) {
-            $terme = $request->string('q');
-            $query->where(function ($w) use ($terme) {
-                $w->where('action', 'like', "%{$terme}%")
-                    ->orWhere('auditable_type', 'like', "%{$terme}%")
-                    ->orWhereHas('user', function ($u) use ($terme) {
-                        $u->where('name', 'like', "%{$terme}%");
+            $terme = mb_substr((string) $request->string('q'), 0, 100);
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $terme);
+
+            $query->where(function ($w) use ($escaped) {
+                $w->where('action', 'like', "%{$escaped}%")
+                    ->orWhere('auditable_type', 'like', "%{$escaped}%")
+                    ->orWhereHas('user', function ($u) use ($escaped) {
+                        $u->where('name', 'like', "%{$escaped}%");
                     });
             });
         }

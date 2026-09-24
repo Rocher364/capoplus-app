@@ -1,14 +1,14 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion - CASH</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
     <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-        <!-- Section Gòch (Brand / Gradient) -->
+        <!-- Section GÃ²ch (Brand / Gradient) -->
         <div class="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-orange-600 via-orange-700 to-slate-900 text-white relative overflow-hidden">
             <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5"></div>
             <div class="absolute bottom-0 -left-24 w-72 h-72 rounded-full bg-white/5"></div>
@@ -103,4 +103,5 @@
     </div>
 </body>
 </html>
+
 

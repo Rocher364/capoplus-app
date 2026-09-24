@@ -15,11 +15,13 @@ class AccountController extends Controller
         $query = Account::with('member');
 
         if ($request->filled('q')) {
-            $terme = $request->string('q');
-            $query->where('numero_compte', 'like', "%{$terme}%")
-                ->orWhereHas('member', function ($w) use ($terme) {
-                    $w->where('nom', 'like', "%{$terme}%")
-                        ->orWhere('prenom', 'like', "%{$terme}%");
+            $terme = mb_substr((string) $request->string('q'), 0, 100);
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $terme);
+
+            $query->where('numero_compte', 'like', "%{$escaped}%")
+                ->orWhereHas('member', function ($w) use ($escaped) {
+                    $w->where('nom', 'like', "%{$escaped}%")
+                        ->orWhere('prenom', 'like', "%{$escaped}%");
                 });
         }
 

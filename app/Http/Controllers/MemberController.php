@@ -17,13 +17,18 @@ class MemberController extends Controller
         $query = Member::with('account');
 
         if ($request->filled('q')) {
-            $terme = $request->string('q');
-            $query->where(function ($w) use ($terme) {
-                $w->where('nom', 'like', "%{$terme}%")
-                    ->orWhere('prenom', 'like', "%{$terme}%")
-                    ->orWhere('numero_membre', 'like', "%{$terme}%")
-                    ->orWhere('nif_cin', 'like', "%{$terme}%")
-                    ->orWhere('telephone', 'like', "%{$terme}%");
+            // Limite de longueur : empêche les termes excessivement longs (robustesse).
+            // Pas d'injection SQL (requêtes paramétrées Eloquent), mais les wildcards
+            // non échappés peuvent provoquer des scans coûteux ou un comportement inattendu.
+            $terme = mb_substr((string) $request->string('q'), 0, 100);
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $terme);
+
+            $query->where(function ($w) use ($escaped) {
+                $w->where('nom', 'like', "%{$escaped}%")
+                    ->orWhere('prenom', 'like', "%{$escaped}%")
+                    ->orWhere('numero_membre', 'like', "%{$escaped}%")
+                    ->orWhere('nif_cin', 'like', "%{$escaped}%")
+                    ->orWhere('telephone', 'like', "%{$escaped}%");
             });
         }
 
