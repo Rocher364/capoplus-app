@@ -5,7 +5,7 @@
 <div class="max-w-2xl">
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Modifier {{ $member->prenom }} {{ $member->nom }}</h2>
-        <p class="text-sm font-medium text-slate-600 mt-0.5">Numero membre : <span class="font-mono text-slate-800 font-bold">{{ $member->numero_membre }}</span></p>
+        <p class="text-sm font-medium text-slate-600 mt-0.5">Numéro membre : <span class="font-mono text-slate-800 font-bold">{{ $member->numero_membre }}</span></p>
     </div>
 
     <form action="{{ route('members.update', $member) }}" method="POST" class="bg-white rounded-2xl border border-slate-300 shadow-md overflow-hidden">
@@ -14,12 +14,12 @@
 
         {{-- Section Identité --}}
         <div class="px-6 py-4 bg-slate-100 border-b border-slate-300">
-            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Identite</h3>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Identité</h3>
         </div>
         <div class="p-6 space-y-5 border-b border-slate-200">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prenom <span class="text-rose-500">*</span></label>
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prénom <span class="text-rose-500">*</span></label>
                     <input type="text" name="prenom" value="{{ old('prenom', $member->prenom) }}" required
                            class="mt-1.5 w-full rounded-xl border @error('prenom') border-rose-500 @else border-slate-300 @enderror bg-slate-50 text-slate-900 text-sm px-4 py-2.5 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition outline-none">
                     @error('prenom')
@@ -39,9 +39,9 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">NIF / CIN <span class="text-slate-400 font-normal">(Optionnel)</span></label>
-                    <input type="text" name="nif" value="{{ old('nif', $member->nif) }}" placeholder="000-000-000-0"
-                           class="mt-1.5 w-full rounded-xl border @error('nif') border-rose-500 @else border-slate-300 @enderror bg-slate-50 text-slate-900 text-sm px-4 py-2.5 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition outline-none">
-                    @error('nif')
+                    <input type="text" name="nif_cin" value="{{ old('nif_cin', $member->nif_cin) }}" placeholder="000-000-000-0"
+                           class="mt-1.5 w-full rounded-xl border @error('nif_cin') border-rose-500 @else border-slate-300 @enderror bg-slate-50 text-slate-900 text-sm px-4 py-2.5 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition outline-none">
+                    @error('nif_cin')
                         <p class="mt-1 text-xs text-rose-500 font-semibold">{{ $message }}</p>
                     @enderror
                 </div>
@@ -58,7 +58,7 @@
                     <select name="sexe" class="mt-1.5 w-full rounded-xl border @error('sexe') border-rose-500 @else border-slate-300 @enderror bg-slate-50 text-slate-900 text-sm px-4 py-2.5 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition outline-none">
                         <option value="">-</option>
                         <option value="M" @selected(old('sexe', $member->sexe) === 'M')>Masculin</option>
-                        <option value="F" @selected(old('sexe', $member->sexe) === 'F')>Feminin</option>
+                        <option value="F" @selected(old('sexe', $member->sexe) === 'F')>Féminin</option>
                         <option value="Autre" @selected(old('sexe', $member->sexe) === 'Autre')>Autre</option>
                     </select>
                     @error('sexe')
@@ -70,12 +70,12 @@
 
         {{-- Section Coordonnées --}}
         <div class="px-6 py-4 bg-slate-100 border-b border-slate-300">
-            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Coordonnees</h3>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Coordonnées</h3>
         </div>
         <div class="p-6 space-y-5">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Telephone <span class="text-slate-400 font-normal">(Optionnel)</span></label>
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Téléphone <span class="text-slate-400 font-normal">(Optionnel)</span></label>
                     <input type="text" name="telephone" value="{{ old('telephone', $member->telephone) }}"
                            class="mt-1.5 w-full rounded-xl border @error('telephone') border-rose-500 @else border-slate-300 @enderror bg-slate-50 text-slate-900 text-sm px-4 py-2.5 focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition outline-none">
                     @error('telephone')
@@ -101,12 +101,14 @@
             </div>
         </div>
 
-        <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-300 flex items-center gap-4">
-            <button class="px-5 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 shadow-sm active:scale-[0.98] transition duration-150">
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-300 flex items-center gap-3">
+            <button type="submit"
+                    class="px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold shadow-sm active:scale-[0.98] transition">
                 Enregistrer les modifications
             </button>
-            <a href="{{ route('members.index') }}" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Annuler</a>
+            <a href="{{ route('members.index') }}" class="text-sm font-medium text-slate-600 hover:text-slate-800 transition">Annuler</a>
         </div>
     </form>
 </div>
+
 @endsection

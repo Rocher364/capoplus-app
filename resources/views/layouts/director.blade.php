@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -21,6 +21,7 @@
                 <a href="{{ route('director.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition {{ request()->routeIs('director.dashboard') ? 'bg-orange-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">Rapport du jour</a>
                 <a href="{{ route('director.rapports') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition {{ request()->routeIs('director.rapports') ? 'bg-orange-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">Rapports (semaine/mois/annee)</a>
                 <a href="{{ route('director.historique') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition {{ request()->routeIs('director.historique') ? 'bg-orange-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">Historique</a>
+                <a href="{{ route('director.sauvegardes') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition {{ request()->routeIs('director.sauvegardes*') ? 'bg-orange-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">Sauvegardes & Backup</a>
                 <a href="{{ route('director.utilisateurs') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition {{ request()->routeIs('director.utilisateurs*') ? 'bg-orange-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">Utilisateurs</a>
                 <a href="{{ route('director.parametres') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition {{ request()->routeIs('director.parametres') ? 'bg-orange-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">Parametres</a>
             </nav>
@@ -46,6 +47,7 @@
                             <a href="{{ route('director.dashboard') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.dashboard') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Rapport du jour</a>
                             <a href="{{ route('director.rapports') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.rapports') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Rapports</a>
                             <a href="{{ route('director.historique') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.historique') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Historique</a>
+                            <a href="{{ route('director.sauvegardes') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.sauvegardes*') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Sauvegardes</a>
                             <a href="{{ route('director.utilisateurs') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.utilisateurs*') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Utilisateurs</a>
                             <a href="{{ route('director.parametres') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('director.parametres') ? 'bg-orange-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Parametres</a>
                             <div class="px-3 py-2 border-t border-gray-100 mt-2">
@@ -58,7 +60,10 @@
                     </details>
                     <h1 class="truncate text-base sm:text-lg font-semibold text-slate-800">@yield('title', 'Rapport du jour')</h1>
                 </div>
-                <button onclick="window.location.reload()" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50">Actualiser</button>
+                <button data-action="refresh" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Actualiser
+                </button>
             </header>
 
             <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">

@@ -39,7 +39,10 @@ class ReportService
 
     protected function rapportParJour(Carbon $debut, Carbon $fin): array
     {
-        $transactions = Transaction::whereBetween('effectuee_le', [$debut, $fin])->get();
+        $transactions = Transaction::with(['account.member', 'user'])
+            ->whereBetween('effectuee_le', [$debut, $fin])
+            ->latest('effectuee_le')
+            ->get();
         $remboursements = Repayment::whereBetween('effectue_le', [$debut, $fin])->get();
 
         $lignes = [];
@@ -57,12 +60,15 @@ class ReportService
             ];
         }
 
-        return $this->assembler($lignes, 'jour');
+        return $this->assembler($lignes, 'jour', $transactions);
     }
 
     protected function rapportParMois(Carbon $debut, Carbon $fin): array
     {
-        $transactions = Transaction::whereBetween('effectuee_le', [$debut, $fin])->get();
+        $transactions = Transaction::with(['account.member', 'user'])
+            ->whereBetween('effectuee_le', [$debut, $fin])
+            ->latest('effectuee_le')
+            ->get();
         $remboursements = Repayment::whereBetween('effectue_le', [$debut, $fin])->get();
 
         $lignes = [];
@@ -80,10 +86,10 @@ class ReportService
             ];
         }
 
-        return $this->assembler($lignes, 'mois');
+        return $this->assembler($lignes, 'mois', $transactions);
     }
 
-    protected function assembler(array $lignes, string $granularite): array
+    protected function assembler(array $lignes, string $granularite, $operations = null): array
     {
         return [
             'lignes' => $lignes,
@@ -92,6 +98,7 @@ class ReportService
             'totalRetraits' => array_sum(array_column($lignes, 'retraits')),
             'totalRemboursements' => array_sum(array_column($lignes, 'remboursements')),
             'totalOperations' => array_sum(array_column($lignes, 'nb')),
+            'operations' => $operations ?? collect(),
         ];
     }
 }

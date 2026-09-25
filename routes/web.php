@@ -62,4 +62,13 @@ Route::middleware(['auth', 'ensure.auditeur'])->prefix('direction')->name('direc
     // Pour reinitialiser la base en dev/test : php artisan migrate:fresh --seed
     Route::get('/utilisateurs', [DirectorController::class, 'utilisateurs'])->name('utilisateurs');
     Route::post('/utilisateurs/{utilisateur}/mot-de-passe', [DirectorController::class, 'reinitialiserMotDePasse'])->name('utilisateurs.motdepasse');
+
+    // Gestion securisee des sauvegardes et planification
+    Route::get('/sauvegardes', [DirectorController::class, 'sauvegardes'])->name('sauvegardes');
+    Route::post('/sauvegardes/creer', [DirectorController::class, 'creerSauvegarde'])->name('sauvegardes.creer');
+    Route::get('/sauvegardes/{filename}/telecharger', [DirectorController::class, 'telechargerSauvegarde'])->name('sauvegardes.telecharger');
+    Route::post('/sauvegardes/{filename}/restaurer', [DirectorController::class, 'restaurerSauvegarde'])->name('sauvegardes.restaurer');
+    Route::delete('/sauvegardes/{filename}', [DirectorController::class, 'supprimerSauvegarde'])->name('sauvegardes.supprimer');
+    Route::post('/sauvegardes/planification', [DirectorController::class, 'sauvegarderPlanification'])->name('sauvegardes.planification');
+    Route::post('/sauvegardes/importer', [DirectorController::class, 'importerSauvegarde'])->name('sauvegardes.importer');
 });

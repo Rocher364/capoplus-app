@@ -22,4 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Gestionnaire global du bouton actualiser (100% compatible CSP, sans inline script)
+    document.addEventListener('click', (e) => {
+        const refreshBtn = e.target.closest('[data-action="refresh"], [data-refresh], #btn-actualiser, .btn-actualiser');
+        if (refreshBtn) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    });
+
+    // Gestionnaire global du bouton d'impression (100% compatible CSP, sans inline script)
+    document.addEventListener('click', (e) => {
+        const printBtn = e.target.closest('[data-action="print"], [data-print], .btn-imprimer, .btn-print');
+        if (printBtn) {
+            e.preventDefault();
+            window.print();
+        }
+    });
 });

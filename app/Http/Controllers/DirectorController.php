@@ -16,7 +16,7 @@ class DirectorController extends Controller
     {
     }
 
-    /** Rapport du jour : absolument tout ce qui s'est passe aujourd'hui, dans l'ordre. */
+    /** Rapport du jour et supervision globale pour le Directeur. */
     public function dashboard()
     {
         $aujourdhui = now()->toDateString();
@@ -30,7 +30,33 @@ class DirectorController extends Controller
         $parAction = $activites->groupBy('action')->map->count()->sortDesc();
         $parAgent = $activites->groupBy(fn ($a) => $a->user->name ?? 'Systeme')->map->count()->sortDesc();
 
-        return view('director.dashboard', compact('activites', 'totalActions', 'parAction', 'parAgent'));
+        // Donnees membres et activites financieres pour le Directeur
+        $membres = \App\Models\Member::with(['account.transactions', 'loans'])
+            ->latest()
+            ->get();
+
+        $transactionsDuJour = \App\Models\Transaction::with(['account.member', 'user'])
+            ->whereDate('effectuee_le', $aujourdhui)
+            ->latest('effectuee_le')
+            ->get();
+
+        $kpis = [
+            'totalMembres' => \App\Models\Member::count(),
+            'totalSolde' => (float) \App\Models\Account::sum('solde'),
+            'depotsJour' => (float) \App\Models\Transaction::whereDate('effectuee_le', $aujourdhui)->where('type', 'depot')->sum('montant'),
+            'retraitsJour' => (float) \App\Models\Transaction::whereDate('effectuee_le', $aujourdhui)->where('type', 'retrait')->sum('montant'),
+            'totalPretsActifs' => \App\Models\Loan::whereIn('statut', [\App\Enums\LoanStatus::Decaisse, \App\Enums\LoanStatus::EnRetard])->count(),
+        ];
+
+        return view('director.dashboard', compact(
+            'activites',
+            'totalActions',
+            'parAction',
+            'parAgent',
+            'membres',
+            'transactionsDuJour',
+            'kpis'
+        ));
     }
 
     /**
@@ -160,4 +186,99 @@ class DirectorController extends Controller
         return back()->with('success', "Mot de passe de {$utilisateur->name} reinitialise.");
     }
 
+    /**
+     * Interface de gestion des sauvegardes et de la planification.
+     */
+    public function sauvegardes(\App\Services\BackupService $backupService)
+    {
+        $backups = $backupService->listBackups();
+        $schedule = $backupService->getScheduleSettings();
+
+        return view('director.sauvegardes', compact('backups', 'schedule'));
+    }
+
+    /**
+     * Déclenche une sauvegarde manuelle instantanée.
+     */
+    public function creerSauvegarde(Request $request, \App\Services\BackupService $backupService)
+    {
+        $description = $request->input('description', 'Sauvegarde manuelle');
+        $filename = $backupService->createBackup($description, $request->user());
+
+        return back()->with('success', "Sauvegarde [{$filename}] générée avec succès !");
+    }
+
+    /**
+     * Télécharge un fichier de sauvegarde.
+     */
+    public function telechargerSauvegarde(string $filename, \App\Services\BackupService $backupService)
+    {
+        return $backupService->downloadBackup($filename, auth()->user());
+    }
+
+    /**
+     * Restaure la base de données à partir d'une sauvegarde sélectionnée.
+     */
+    public function restaurerSauvegarde(Request $request, string $filename, \App\Services\BackupService $backupService)
+    {
+        try {
+            $result = $backupService->restoreBackup($filename, $request->user());
+            return back()->with('success', $result['message']);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['backup' => "Échec de la restauration : " . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Importe un fichier de sauvegarde externe.
+     */
+    public function importerSauvegarde(Request $request, \App\Services\BackupService $backupService)
+    {
+        $request->validate([
+            'fichier_sauvegarde' => ['required', 'file', 'max:51200'], // 50MB max
+            'description' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        try {
+            $filename = $backupService->importUploadedBackup(
+                $request->file('fichier_sauvegarde'),
+                $request->input('description'),
+                $request->user()
+            );
+
+            return back()->with('success', "Sauvegarde importée avec succès sous le nom [{$filename}]. Vous pouvez la restaurer dès maintenant.");
+        } catch (\Throwable $e) {
+            return back()->withErrors(['backup' => "Fichier de sauvegarde invalide : " . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Supprime un fichier de sauvegarde.
+     */
+    public function supprimerSauvegarde(string $filename, \App\Services\BackupService $backupService)
+    {
+        $backupService->deleteBackup($filename, auth()->user());
+
+        return back()->with('success', "Sauvegarde supprimée avec succès.");
+    }
+
+    /**
+     * Enregistre les paramètres de planification automatique.
+     */
+    public function sauvegarderPlanification(Request $request, \App\Services\BackupService $backupService)
+    {
+        $data = $request->validate([
+            'enabled' => ['nullable'],
+            'frequency' => ['required', 'in:daily,weekly,monthly'],
+            'time' => ['required', 'date_format:H:i'],
+            'day_of_week' => ['nullable', 'integer', 'between:1,7'],
+            'day_of_month' => ['nullable', 'integer', 'between:1,28'],
+            'keep_last' => ['required', 'integer', 'between:1,100'],
+        ]);
+
+        $data['enabled'] = $request->has('enabled');
+        $backupService->saveScheduleSettings($data, $request->user());
+
+        return back()->with('success', 'Planification des sauvegardes automatiques mise à jour avec succès.');
+    }
 }
