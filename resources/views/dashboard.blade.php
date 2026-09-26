@@ -7,10 +7,6 @@
         <h2 class="text-2xl font-bold text-slate-900">Bilan du jour</h2>
         <p class="text-sm text-slate-500">{{ now()->translatedFormat('l d F Y') }}</p>
     </div>
-    <button onclick="window.print()" type="button"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">
-        Imprimer le bilan
-    </button>
 </div>
 
 <div class="hidden print:flex items-center gap-3 mb-6">
@@ -21,7 +17,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-xl border shadow-sm p-5 print-card">
         <p class="text-xs font-medium text-slate-500 uppercase">Depots aujourd'hui</p>
         <p class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($totalDepots, 2) }}</p>
@@ -46,7 +42,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-xl border shadow-sm p-5 print-card">
         <p class="text-xs font-medium text-slate-500 uppercase">Nouveaux membres</p>
         <p class="text-xl font-bold text-slate-800 mt-1">{{ $nouveauxMembres }}</p>
@@ -68,7 +64,7 @@
 
 <div class="bg-white rounded-xl border shadow-sm p-5 mb-6 print-card">
     <p class="text-xs font-medium text-slate-500 uppercase mb-3">Etat global du reseau</p>
-    <div class="grid grid-cols-3 gap-4 text-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
         <div>
             <p class="text-slate-400">Solde total tous comptes</p>
             <p class="text-lg font-bold text-slate-900">{{ number_format($soldeTotalReseau, 2) }} HTG</p>

@@ -15,7 +15,96 @@
     --color-brand-700: #c2410c;
 }
 
+/* Keep the director report tables complete and readable without horizontal scrolling. */
+.report-table-wrap {
+    overflow-x: hidden !important;
+}
+
+.report-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    font-size: 10px;
+}
+
+.report-table th,
+.report-table td {
+    padding: 8px 5px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.report-table th:nth-child(1),
+.report-table td:nth-child(1) { width: 11%; }
+.report-table th:nth-child(2),
+.report-table td:nth-child(2) { width: 14%; }
+.report-table th:nth-child(3),
+.report-table td:nth-child(3) { width: 16%; }
+.report-table th:nth-child(4),
+.report-table td:nth-child(4) { width: 13%; }
+.report-table th:nth-child(5),
+.report-table td:nth-child(5) { width: 12%; }
+.report-table th:nth-child(6),
+.report-table td:nth-child(6) { width: 12%; }
+.report-table th:nth-child(7),
+.report-table td:nth-child(7) { width: 12%; }
+.report-table th:nth-child(8),
+.report-table td:nth-child(8) { width: 10%; }
+
+.overflow-x-auto {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+}
+
+button,
+a,
+select,
+input[type='checkbox'],
+input[type='radio'] {
+    touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+    .app-header {
+        gap: 0.5rem;
+    }
+
+    .app-header h1 {
+        max-width: 48vw;
+    }
+
+    .app-header-tools button {
+        padding-left: 0.625rem;
+        padding-right: 0.625rem;
+    }
+
+    main {
+        overflow-x: hidden;
+    }
+}
+
+@media (max-width: 420px) {
+    .app-clock {
+        display: none;
+    }
+}
+
 @media print {
+    @page {
+        size: landscape;
+        margin: 10mm;
+    }
+
+    body {
+        background: white !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
     .no-print {
         display: none !important;
     }
@@ -25,4 +114,48 @@
     main {
         padding: 0 !important;
     }
+
+    .print-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        margin-bottom: 8mm !important;
+    }
+
+    .print-table-wrap {
+        width: 100% !important;
+        max-width: none !important;
+        overflow: visible !important;
+    }
+
+    .print-table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+        font-size: 8px !important;
+    }
+
+    .print-table th,
+    .print-table td {
+        padding: 4px 3px !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .print-table th:nth-child(1),
+    .print-table td:nth-child(1) { width: 11%; }
+    .print-table th:nth-child(2),
+    .print-table td:nth-child(2) { width: 14%; }
+    .print-table th:nth-child(3),
+    .print-table td:nth-child(3) { width: 16%; }
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) { width: 13%; }
+    .print-table th:nth-child(5),
+    .print-table td:nth-child(5) { width: 12%; }
+    .print-table th:nth-child(6),
+    .print-table td:nth-child(6) { width: 12%; }
+    .print-table th:nth-child(7),
+    .print-table td:nth-child(7) { width: 12%; }
+    .print-table th:nth-child(8),
+    .print-table td:nth-child(8) { width: 10%; }
 }

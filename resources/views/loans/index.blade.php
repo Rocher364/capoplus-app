@@ -42,9 +42,24 @@
                                 default => 'bg-slate-200 text-slate-800 border-slate-300',
                             };
                         @endphp
-                        <span class="px-3 py-1 rounded-full text-xs font-bold border inline-block {{ $badge }}">
-                            {{ $loan->statut->label() ?? $loan->statut }}
-                        </span>
+                        @if (($loan->statut->value ?? $loan->statut) === 'demande')
+                            @can('approve', $loan)
+                                <form action="{{ route('loans.approuver', $loan) }}" method="POST" class="inline-block" onsubmit="return confirm('Approuver cette demande de pret ?');">
+                                    @csrf
+                                    <button type="submit" class="cursor-pointer rounded-full border px-3 py-1 text-xs font-bold transition hover:brightness-95 {{ $badge }}" title="Cliquer pour approuver">
+                                        {{ $loan->statut->label() ?? $loan->statut }}
+                                    </button>
+                                </form>
+                            @else
+                                <span class="pointer-events-none cursor-default px-3 py-1 rounded-full text-xs font-bold border inline-block {{ $badge }}">
+                                    {{ $loan->statut->label() ?? $loan->statut }}
+                                </span>
+                            @endcan
+                        @else
+                            <span class="pointer-events-none cursor-default px-3 py-1 rounded-full text-xs font-bold border inline-block {{ $badge }}">
+                                {{ $loan->statut->label() ?? $loan->statut }}
+                            </span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 font-medium text-slate-600 text-xs whitespace-nowrap">{{ $loan->date_demande->format('d/m/Y') }}</td>
                     <td class="px-6 py-4 text-right whitespace-nowrap">

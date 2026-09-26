@@ -1,3 +1,15 @@
+## Production security checklist
+
+Before exposing the application online:
+
+- Set `APP_ENV=production`, `APP_DEBUG=false`, and a real HTTPS `APP_URL`.
+- Generate a unique `APP_KEY`; never reuse it across environments and never commit `.env`.
+- Set `SESSION_SECURE_COOKIE=true` and `SESSION_ENCRYPT=true` when serving over HTTPS.
+- Use a managed database with restricted credentials, run `php artisan migrate --force`, then run `php artisan config:cache` and `php artisan route:cache`.
+- Keep `storage/app/backups` private and outside the web document root; download access remains restricted to the Director role.
+- Put the app behind HTTPS, a firewall, and regular off-site backups. Do not expose the database or debug endpoints publicly.
+- Run `composer audit --no-interaction` before each release.
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

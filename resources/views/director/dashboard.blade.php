@@ -69,8 +69,8 @@
         <span class="text-xs font-bold bg-orange-600 px-3 py-1 rounded-full text-white">{{ $membres->count() }} membre(s)</span>
     </div>
 
-    <div class="w-full overflow-x-auto">
-        <table class="w-full text-sm text-left border-collapse">
+    <div class="report-table-wrap print-table-wrap w-full overflow-x-auto">
+        <table class="report-table print-table w-full text-sm text-left border-collapse">
             <thead class="bg-slate-100 text-slate-700 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
                 <tr>
                     <th class="px-5 py-3.5 whitespace-nowrap">N° Membre</th>
@@ -141,8 +141,8 @@
         <span class="text-xs font-bold bg-slate-900 px-3 py-1 rounded-full text-white">{{ $transactionsDuJour->count() }} transaction(s)</span>
     </div>
 
-    <div class="w-full overflow-x-auto">
-        <table class="w-full text-sm text-left border-collapse">
+    <div class="report-table-wrap print-table-wrap w-full overflow-x-auto">
+        <table class="report-table print-table w-full text-sm text-left border-collapse">
             <thead class="bg-slate-50 text-slate-700 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
                 <tr>
                     <th class="px-5 py-3 whitespace-nowrap">Heure</th>

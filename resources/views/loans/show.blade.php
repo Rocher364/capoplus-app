@@ -22,7 +22,7 @@
                         default => 'bg-slate-200 text-slate-800 border-slate-300',
                     };
                 @endphp
-                <span class="px-3.5 py-1.5 rounded-full text-xs font-bold border inline-block {{ $badge }}">
+                <span class="pointer-events-none cursor-default px-3.5 py-1.5 rounded-full text-xs font-bold border inline-block {{ $badge }}">
                     {{ $loan->statut->label() ?? $loan->statut }}
                 </span>
             </div>

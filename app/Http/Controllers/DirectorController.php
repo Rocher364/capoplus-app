@@ -9,6 +9,7 @@ use App\Services\ReportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class DirectorController extends Controller
 {
@@ -86,7 +87,14 @@ class DirectorController extends Controller
      */
     public function historique(Request $request)
     {
-        $query = AuditLog::with('user');
+        $query = AuditLog::with(['user', 'auditable']);
+        $historiqueMasqueAvant = DB::table('director_audit_visibility')
+            ->where('id', 1)
+            ->value('hidden_before');
+
+        if ($historiqueMasqueAvant) {
+            $query->where('created_at', '>', $historiqueMasqueAvant);
+        }
 
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->date('date'));
@@ -108,6 +116,44 @@ class DirectorController extends Controller
         $activites = $query->latest('created_at')->paginate(40)->withQueryString();
 
         return view('director.historique', compact('activites'));
+    }
+
+    /** Masque l'historique visible apres re-authentification et sauvegarde. */
+    public function effacerHistorique(Request $request, \App\Services\BackupService $backupService)
+    {
+        $data = $request->validate([
+            'mot_de_passe_actuel' => ['required', 'string'],
+            'confirmation' => ['required', 'string', 'in:EFFACER TOUT L\'HISTORIQUE'],
+        ]);
+
+        $directeur = $request->user();
+
+        if (! Hash::check($data['mot_de_passe_actuel'], $directeur->password)) {
+            return back()->withErrors([
+                'mot_de_passe_actuel' => 'Le mot de passe actuel est incorrect. Aucune donnee n\'a ete masquee.',
+            ]);
+        }
+
+        $backupFilename = $backupService->createBackup('Sauvegarde automatique avant effacement de l affichage historique', $directeur);
+        $dateEffacement = now();
+
+        ActivityLogger::log($directeur, 'historique.affichage_efface', null, [
+            'sauvegarde' => $backupFilename,
+            'historique_conserve_en_base' => true,
+            'affichage_masque_avant' => $dateEffacement->toIso8601String(),
+        ]);
+
+        DB::table('director_audit_visibility')->updateOrInsert(
+            ['id' => 1],
+            [
+                'hidden_before' => $dateEffacement,
+                'cleared_by' => $directeur->id,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        return back()->with('success', 'L historique a ete retire de l affichage. Une sauvegarde securisee a ete conservee.');
     }
 
     /** Page de parametres personnels du Directeur : lui seul y accede, lui seul peut la modifier. */
@@ -140,18 +186,40 @@ class DirectorController extends Controller
         return back()->with('success', 'Mot de passe mis a jour avec succes.');
     }
 
-    /**
-     * VULN-04 : Methode desactivee.
-     *
-     * La purge massive de donnees financieres et de la piste d'audit
-     * ne doit jamais etre accessible depuis l'application de production.
-     *
-     * Pour reinitialiser la base en dev/test :
-     *   php artisan migrate:fresh --seed
-     */
-    public function purgerDonnees(Request $request)
+    /** Purge les donnees metier apres une re-authentification du Directeur. */
+    public function purgerDonnees(Request $request, \App\Services\BackupService $backupService)
     {
-        abort(403, 'Cette fonctionnalite a ete desactivee pour des raisons de securite.');
+        $data = $request->validate([
+            'mot_de_passe_actuel' => ['required', 'string'],
+            'confirmation' => ['required', 'string', 'in:EFFACER LES DONNEES'],
+        ]);
+
+        $directeur = $request->user();
+
+        if (! Hash::check($data['mot_de_passe_actuel'], $directeur->password)) {
+            return back()->withErrors([
+                'mot_de_passe_actuel' => 'Le mot de passe actuel est incorrect. Aucune donnee n\'a ete effacee.',
+            ]);
+        }
+
+        $backupFilename = $backupService->createBackup('Sauvegarde automatique avant purge des donnees', $directeur);
+        $counts = [];
+
+        DB::transaction(function () use (&$counts) {
+            foreach (['repayments', 'loan_schedules', 'loans', 'transactions', 'accounts', 'members'] as $table) {
+                $counts[$table] = DB::table($table)->count();
+                DB::table($table)->delete();
+            }
+        });
+
+        ActivityLogger::log($directeur, 'donnees.purgees', null, [
+            'sauvegarde_avant_purge' => $backupFilename,
+            'elements_effaces' => $counts,
+            'audit_logs_conserves' => true,
+            'utilisateurs_conserves' => true,
+        ]);
+
+        return back()->with('success', 'Les donnees metier ont ete effacees apres sauvegarde. La piste d audit et les utilisateurs ont ete conserves.');
     }
 
     /**
@@ -217,19 +285,6 @@ class DirectorController extends Controller
     }
 
     /**
-     * Restaure la base de données à partir d'une sauvegarde sélectionnée.
-     */
-    public function restaurerSauvegarde(Request $request, string $filename, \App\Services\BackupService $backupService)
-    {
-        try {
-            $result = $backupService->restoreBackup($filename, $request->user());
-            return back()->with('success', $result['message']);
-        } catch (\Throwable $e) {
-            return back()->withErrors(['backup' => "Échec de la restauration : " . $e->getMessage()]);
-        }
-    }
-
-    /**
      * Importe un fichier de sauvegarde externe.
      */
     public function importerSauvegarde(Request $request, \App\Services\BackupService $backupService)
@@ -246,7 +301,7 @@ class DirectorController extends Controller
                 $request->user()
             );
 
-            return back()->with('success', "Sauvegarde importée avec succès sous le nom [{$filename}]. Vous pouvez la restaurer dès maintenant.");
+            return back()->with('success', "Sauvegarde importée avec succès sous le nom [{$filename}]. Vous pouvez la télécharger ou la conserver comme archive sécurisée.");
         } catch (\Throwable $e) {
             return back()->withErrors(['backup' => "Fichier de sauvegarde invalide : " . $e->getMessage()]);
         }

@@ -46,7 +46,10 @@ class ActivityLogger
         ?array $details = null,
         ?array $anciennesValeurs = null
     ): AuditLog {
-        $userId = $auteur?->id ?? auth()->id();
+        $candidateUserId = $auteur?->getKey() ?? auth()->id();
+        $userId = $candidateUserId && User::whereKey($candidateUserId)->exists()
+            ? $candidateUserId
+            : null;
 
         $ip = request()?->ip() ?? '127.0.0.1';
         $userAgent = request()?->userAgent();

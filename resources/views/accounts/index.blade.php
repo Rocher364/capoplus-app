@@ -12,7 +12,7 @@
     </a>
 </div>
 
-<form method="GET" action="{{ route('accounts.index') }}" class="mb-6 flex gap-3">
+<form method="GET" action="{{ route('accounts.index') }}" class="mb-6 flex flex-col gap-3 sm:flex-row">
     <input type="text" name="q" value="{{ request('q') }}" placeholder="Rechercher par numero de compte ou nom du membre..."
            class="flex-1 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 shadow-sm transition duration-150 outline-none">
     <button type="submit" class="px-6 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 shadow-sm active:scale-[0.98] transition duration-150">

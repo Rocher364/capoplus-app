@@ -108,26 +108,15 @@ class BackupSecurityTest extends TestCase
         $this->assertEquals(20, $settings['keep_last']);
     }
 
-    public function test_director_can_restore_backup_safely(): void
+    public function test_backup_restore_is_not_exposed(): void
     {
-        // Créer un utilisateur test supplémentaire
-        User::factory()->create(['email' => 'extra@restore.test', 'statut' => 'actif']);
-        $this->assertDatabaseHas('users', ['email' => 'extra@restore.test']);
+        $response = $this->actingAs($this->director)->post('/direction/sauvegardes/backup-inexistant/restaurer');
 
-        // Créer sauvegarde
-        $filename = $this->backupService->createBackup('Snapshot avant suppression', $this->director);
+        $response->assertNotFound();
 
-        // Supprimer l'utilisateur
-        User::where('email', 'extra@restore.test')->delete();
-        $this->assertDatabaseMissing('users', ['email' => 'extra@restore.test']);
-
-        // Restaurer la sauvegarde
-        $response = $this->actingAs($this->director)->post(route('director.sauvegardes.restaurer', $filename));
-        $response->assertRedirect();
-        $response->assertSessionHas('success');
-
-        // Vérifier que l'utilisateur a bien été restauré
-        $this->assertDatabaseHas('users', ['email' => 'extra@restore.test']);
+        $page = $this->actingAs($this->director)->get(route('director.sauvegardes'));
+        $page->assertDontSee('Restaurer');
+        $page->assertDontSee('sauvegardes.restaurer');
     }
 
     public function test_corrupted_backup_import_is_rejected(): void

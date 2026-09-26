@@ -54,12 +54,14 @@ Route::middleware(['auth', 'ensure.auditeur'])->prefix('direction')->name('direc
     Route::get('/', [DirectorController::class, 'dashboard'])->name('dashboard');
     Route::get('/rapports', [DirectorController::class, 'rapports'])->name('rapports');
     Route::get('/historique', [DirectorController::class, 'historique'])->name('historique');
+    Route::post('/historique/effacer', [DirectorController::class, 'effacerHistorique'])
+        ->middleware('throttle:3,10')
+        ->name('historique.effacer');
     Route::get('/parametres', [DirectorController::class, 'parametres'])->name('parametres');
     Route::post('/parametres/mot-de-passe', [DirectorController::class, 'changerMotDePasse'])->name('motdepasse');
-    // VULN-04 : La route POST /purger-donnees a ete supprimee.
-    // La purge massive de donnees financieres et de la piste d'audit
-    // ne doit pas etre accessible depuis l'application de production.
-    // Pour reinitialiser la base en dev/test : php artisan migrate:fresh --seed
+    Route::post('/purger-donnees', [DirectorController::class, 'purgerDonnees'])
+        ->middleware('throttle:3,10')
+        ->name('purger-donnees');
     Route::get('/utilisateurs', [DirectorController::class, 'utilisateurs'])->name('utilisateurs');
     Route::post('/utilisateurs/{utilisateur}/mot-de-passe', [DirectorController::class, 'reinitialiserMotDePasse'])->name('utilisateurs.motdepasse');
 
@@ -67,7 +69,6 @@ Route::middleware(['auth', 'ensure.auditeur'])->prefix('direction')->name('direc
     Route::get('/sauvegardes', [DirectorController::class, 'sauvegardes'])->name('sauvegardes');
     Route::post('/sauvegardes/creer', [DirectorController::class, 'creerSauvegarde'])->name('sauvegardes.creer');
     Route::get('/sauvegardes/{filename}/telecharger', [DirectorController::class, 'telechargerSauvegarde'])->name('sauvegardes.telecharger');
-    Route::post('/sauvegardes/{filename}/restaurer', [DirectorController::class, 'restaurerSauvegarde'])->name('sauvegardes.restaurer');
     Route::delete('/sauvegardes/{filename}', [DirectorController::class, 'supprimerSauvegarde'])->name('sauvegardes.supprimer');
     Route::post('/sauvegardes/planification', [DirectorController::class, 'sauvegarderPlanification'])->name('sauvegardes.planification');
     Route::post('/sauvegardes/importer', [DirectorController::class, 'importerSauvegarde'])->name('sauvegardes.importer');
